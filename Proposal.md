@@ -19,7 +19,15 @@ November 6, 2018
 
 **(3) \[X3\] Street Closures due to construction activities by Intersection** <https://data.cityofnewyork.us/Transportation/Street-Closures-due-to-construction-activities-by-/478a-yykk>
 
-**6. The planned analyses / visualizations / coding challenges** \* Response time over a day - during a day / during a night \* Response time over a year - by season link to weather data \* Response time vs traffic - NYC has a lot of spots under construction. Street closure is related to ambulance response time.
+**6. The planned analyses / visualizations / coding challenges** \* Response time over a day - during a day / during a night
+
+-   Response time over a year
+-   by season link to weather data
+
+-   Response time vs traffic
+-   NYC has a lot of spots under construction.
+
+Street closure is related to ambulance response time.
 
 **7. The planned timeline**
 
