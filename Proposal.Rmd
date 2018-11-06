@@ -28,7 +28,7 @@ Longer response times affect survival rates. For time-sensitive conditions such 
 
 **4. The intended final products**
 Explain the response time with time of the day, weather, season, area and traffic, etc.  
-
+we will analyze and visualize the effect of different factors on the resonse time in NYC. We wil also construct the website containing our analysis and graphs. 
 
 **5. The anticipated data sources**
 
