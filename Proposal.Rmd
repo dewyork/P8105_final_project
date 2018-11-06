@@ -2,7 +2,8 @@
 title: "Proposal"
 author: "Youn Kyeong Chang (uni# yc3242)"
 date: "November 6, 2018"
-output: html_document
+output:
+  html_document: default
 ---
 **1. The group members (names and UNIs)**
 * Youn Kyeong Chang (yc3242)
@@ -17,23 +18,11 @@ Factors associated with response time of emergency medical service(EMS) in New Y
 
 
 **3. The motivation for this project**
-
-https://www.nytimes.com/2017/12/31/nyregion/fire-department-medical-emergencies-times-square-nyc.html
-
-Longer response times affect survival rates. For time-sensitive conditions such as life-threatening emergency, a delay of even a few minutes can be the difference between life and death and the difference between someone being able to recover with no disability.
+Longer response times affect survival rates. For time-sensitive conditions such as life-threatening emergency, a delay of even a few minutes can make the difference between life and death. Thus, analyzing the response time of EMS so as to improve it is important. 
 
 
 **4. The intended final products**
-* Y: response time
-* X1: time of the day 
-* X2: weather(snow, precipitation...) 
-* X3: area (traffic - street closure..)
-
-https://www.nytimes.com/2017/12/31/nyregion/fire-department-medical-emergencies-times-square-nyc.html
-
-* "Since the unit was created in August, *response times* for life-threatening calls in the area have improved by an average of 68 seconds in the last four months of 2017 compared with the same period in the previous year. The data provided by the Fire Department represents the time from when a 911 call was received by the department to when an ambulance arrived at the scene."
-
-* "There are *times where an ambulance will take 10 to 15 minutes* just to get three blocks from one side of Times Square," said Donald Hunker, a member of the unit. "Fifteen minutes is a very long time, especially when someone needs an ambulance."
+Explain the response time with time of the day, weather, season, area and traffic, etc.  
 
 
 **5. The anticipated data sources**
@@ -41,30 +30,21 @@ https://www.nytimes.com/2017/12/31/nyregion/fire-department-medical-emergencies-
 **(1) [Y, X1] Incidents Responded to by Fire Companies**
 https://data.cityofnewyork.us/Public-Safety/Incidents-Responded-to-by-Fire-Companies/tm6d-hbzd
 
-* Variables such as:
-'r incident_type_desc' -- 522 - Water or steam leak
-'r incident_date_time' -- 2017 Dec 31 11:58:41 PM
-'r arrival_date_time' -- 2018 Jan 01 12:02:14 AM
-'r street_highway' -- 125 ST
-'r borough_desc' -- 5 - Queens
-
 **(2) [X2] NYC weather data**
 https://www.ncdc.noaa.gov/cdo-web/datasets
 
 **(3) [X3] Street Closures due to construction activities by Intersection**
 https://data.cityofnewyork.us/Transportation/Street-Closures-due-to-construction-activities-by-/478a-yykk
 
-*Variables such as:
-'r borough_code'
-'r work_start_date'
-'r work_end_date'
-
 
 **6. The planned analyses / visualizations / coding challenges**
-* Response time over a day - during a day / during a night 
-* Response time over a year - by seasons... link to weather data
-* Response time vs traffic - NYC has a lot of spots under construction.
-  Street closure is related to ambulance response time?
+* Response time over a day 
+  - during a day / during a night 
+* Response time over a year 
+  - by season link to weather data
+* Response time vs traffic 
+  - NYC has a lot of spots under construction.
+  Street closure is related to ambulance response time.
 
 **7. The planned timeline**
 
