@@ -22,3 +22,9 @@ November 6, 2018
 **6. The planned analyses / visualizations / coding challenges** \* Response time over a day - during a day / during a night \* Response time over a year - by season link to weather data \* Response time vs traffic - NYC has a lot of spots under construction. Street closure is related to ambulance response time.
 
 **7. The planned timeline**
+
+-   **Nov12:** Data cleaning and merging
+-   **Nov 20:** Visualization
+-   **Nov 28:** Assessment and Inferences
+-   **Dec 2:** Final changes and finish report
+-   **Dec 5:** Webpage and Screencast

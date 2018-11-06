@@ -48,6 +48,12 @@ https://data.cityofnewyork.us/Transportation/Street-Closures-due-to-construction
 
 **7. The planned timeline**
 
+ 
+* __Nov12:__ Data cleaning and merging
+* __Nov 20:__ Visualization
+* __Nov 28:__ Assessment and Inferences
+* __Dec 2:__ Final changes and finish report
+* __Dec 5:__ Webpage and Screencast
 
 
 
