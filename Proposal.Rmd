@@ -8,7 +8,7 @@ output: html_document
 * Youn Kyeong Chang (yc3242)
 * pengxuan chen(pc2853)
 * Anusorn Thanataveerat (at2710)
-* Apoorva Srinivasan (as5697)
+* __Apoorva Srinivasan__ (as5697)
 * Abhishek Ajay (aa4266)
 
 
