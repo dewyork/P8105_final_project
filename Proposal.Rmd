@@ -3,7 +3,7 @@ title: "Proposal"
 author: "Youn Kyeong Chang (uni# yc3242)"
 date: "November 6, 2018"
 output:
-  html_document: default
+  github_document: default
 ---
 **1. The group members (names and UNIs)**
 * Youn Kyeong Chang (yc3242)
