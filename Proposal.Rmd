@@ -6,10 +6,15 @@ output:
   github_document: default
 ---
 **1. The group members (names and UNIs)**
+
 * Youn Kyeong Chang (yc3242)
+
 * pengxuan chen(pc2853)
+
 * Anusorn Thanataveerat (at2710)
-* __Apoorva Srinivasan__ (as5697)
+
+* Apoorva Srinivasan (as5697)
+
 * Abhishek Ajay (aa4266)
 
 

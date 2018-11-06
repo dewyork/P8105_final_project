@@ -3,7 +3,17 @@ Proposal
 Youn Kyeong Chang (uni\# yc3242)
 November 6, 2018
 
-**1. The group members (names and UNIs)** \* Youn Kyeong Chang (yc3242) \* pengxuan chen(pc2853) \* Anusorn Thanataveerat (at2710) \* **Apoorva Srinivasan** (as5697) \* Abhishek Ajay (aa4266)
+**1. The group members (names and UNIs)**
+
+-   Youn Kyeong Chang (yc3242)
+
+-   pengxuan chen(pc2853)
+
+-   Anusorn Thanataveerat (at2710)
+
+-   Apoorva Srinivasan (as5697)
+
+-   Abhishek Ajay (aa4266)
 
 **2. The tentative project title** Factors associated with response time of emergency medical service(EMS) in New York City
 
