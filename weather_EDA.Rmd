@@ -6,10 +6,16 @@ output: html_document
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(echo = TRUE, 
+                      fig.width = 6, 
+                      fig.asp = .6,
+                      out.width = "90%")
 library(rnoaa)
 library(tidyverse)
+library(ggplot2)
+library(patchwork)
 
+theme_set(theme_bw() + theme(legend.position = "bottom"))
 ```
 
 Importing the weather data.
@@ -85,3 +91,29 @@ nyc_weather_2017 %>%
   head() %>% 
   knitr::kable()
 ```
+
+
+```{r viz_1}
+tmax_plot = 
+  nyc_weather_2017 %>% 
+  ggplot(aes(x = date, y = tmax)) +
+  geom_line() 
+  
+tmin_plot = 
+  nyc_weather_2017 %>% 
+  ggplot(aes(x = date, y = tmin)) +
+  geom_line()
+
+snow_plot = 
+  nyc_weather_2017 %>% 
+  ggplot(aes(x = date, y = snow)) +
+  geom_line()
+
+snwd_plot = 
+  nyc_weather_2017 %>% 
+  ggplot(aes(x = date, y = snwd)) +
+  geom_line()
+
+(tmax_plot + snow_plot) / (tmin_plot + snwd_plot)
+```
+
