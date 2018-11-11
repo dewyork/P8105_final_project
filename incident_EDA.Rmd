@@ -1,8 +1,8 @@
 ---
 title: "incident_EDA"
-author: "Youn Kyeong Chang (uni# yc3242)"
+author: "Team"
 date: "November 10, 2018"
-output: html_document
+output: github_document
 ---
 
 ```{r}
@@ -10,7 +10,7 @@ library(tidyverse)
 library(lubridate)
 ```
 
-## Data load
+## Data loading
 ```{r}
 incident_dat_2017 <-  
   read_csv('data/Incidents_Responded_to_by_Fire_Companies.csv',
@@ -26,10 +26,4 @@ incident_dat_2017 <-
          street_highway:borough_desc)
 ```
 
-
-```{r}
-incident_dat_time <-
-  incident_dat_2017 %>% 
-  mutate(day = yday(INCIDENT_DATE_TIME))
-```
 
