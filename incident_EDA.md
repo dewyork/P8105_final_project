@@ -44,7 +44,20 @@ incident_dat_2017 <-
   filter(year(incident_date_time) == 2017,
          incident_type_desc == "300 - Rescue, EMS incident, other") %>% 
   select(im_incident_key, incident_date_time, arrival_date_time,
-         street_highway:borough_desc)
+         street_highway:borough_desc) %>% 
+  na.omit() %>% 
+
+  # Added response time(sec) variable
+  mutate(response_time = arrival_date_time - incident_date_time) %>%
+  
+  # Added incident_month and incident_day variables from incident_date_time
+  mutate(incident_date = as.Date(incident_date_time)) %>% 
+  separate(incident_date, 
+           into = c("incident_year", "incident_month", "incident_day"), 
+           sep = "-") %>% 
+  select(-incident_year) %>% 
+  mutate(incident_month = as.numeric(incident_month),
+         incident_day = as.numeric(incident_day))
 ```
 
     ## Warning: Unnamed `col_types` should have the same length as `col_names`.
