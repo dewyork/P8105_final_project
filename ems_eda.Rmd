@@ -1,0 +1,33 @@
+---
+title: "EMS_EDA"
+author: "Youn Kyeong Chang (uni# yc3242)"
+date: "November 7, 2018"
+output: html_document
+---
+
+```{r}
+library(tidyverse)
+library(rvest)
+library(httr)
+```
+
+```{r}
+ems_data =
+  read_csv(file = "./data/Incidents_Responded_to_by_Fire_Companies.csv") %>% 
+  janitor::clean_names() %>% 
+  filter(incident_type_desc == "300 - Rescue, EMS incident, other")
+  separate(incident_date_time, into = c("month", "day", "year"), sep = "/")
+
+medical_ems_data = 
+  ems_data %>% 
+  count(incident_type_desc) %>% 
+  arrange(desc(n))
+
+temp <- ems_data %>% mutate(year = substr(incident_date_time,7,10))
+
+temp <- temp %>% filter(year == 2017) %>% count(incident_type_desc) %>% 
+  arrange(desc(n))
+
+
+```
+
