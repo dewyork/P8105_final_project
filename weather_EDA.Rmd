@@ -1,0 +1,87 @@
+---
+title: "Weather_EDA"
+author: "Abhishek Ajay (aa4266)"
+date: "November 11, 2018"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(rnoaa)
+library(tidyverse)
+
+```
+
+Importing the weather data.
+```{r data_import, cache = TRUE}
+nyc_weather_2017 = 
+  rnoaa::meteo_pull_monitors("USW00094728", 
+                             var = c("PRCP", "TMIN", "TMAX", "SNOW", "SNWD"), 
+                             date_min = "2017-01-01", 
+                             date_max = "2017-12-31"
+                             )
+
+```
+ Data Description: 
+ 
+* id: Weather station ID
+* date: Date of observation
+* prcp: Precipitation (tenths of mm)
+* snow: Snowfall (mm)
+* snwd: Snow depth (mm)
+* tmax: Maximum temperature (tenths of degrees C)
+* tmin: Minimum temperature (tenths of degrees C)
+
+```{r data_tidying}
+nyc_weather_2017 = 
+  nyc_weather_2017 %>% 
+  mutate(tmin = tmin/10, tmax = tmax/10, prcp = prcp/10)
+```
+
+top 6 days with **highest temp**
+```{r order_1}
+nyc_weather_2017 %>% 
+  arrange(desc(tmax)) %>% 
+  head() %>% 
+  knitr::kable()
+```
+
+top 6 days with **lowest temp**
+```{r order_2}
+nyc_weather_2017 %>% 
+  arrange(tmin) %>% 
+  head() %>% 
+  knitr::kable()
+```
+
+top 6 days with **highest snow**
+```{r order_3}
+nyc_weather_2017 %>% 
+  arrange(desc(snow)) %>% 
+  head() %>% 
+  knitr::kable()
+```
+
+top 6 days with **least snow**
+```{r order_4}
+nyc_weather_2017 %>% 
+  arrange(snow) %>% 
+  head() %>% 
+  knitr::kable()
+```
+
+top 6 days with **highest snow depth**
+```{r order_5}
+nyc_weather_2017 %>% 
+  arrange(desc(snwd)) %>% 
+  head() %>% 
+  knitr::kable()
+```
+
+top 6 days with **least snow depth**
+```{r order_6}
+nyc_weather_2017 %>% 
+  arrange(snwd) %>% 
+  head() %>% 
+  knitr::kable()
+```
