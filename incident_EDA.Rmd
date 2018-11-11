@@ -10,7 +10,7 @@ library(tidyverse)
 library(lubridate)
 ```
 
-## Data loading
+## Loaded and tidied data
 ```{r}
 incident_dat_2017 <-  
   read_csv('data/Incidents_Responded_to_by_Fire_Companies.csv',
