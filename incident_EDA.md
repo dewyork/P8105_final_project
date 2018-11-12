@@ -29,8 +29,8 @@ library(lubridate)
     ## 
     ##     date
 
-Data loading
-------------
+Loaded and tidied data
+----------------------
 
 ``` r
 incident_dat_2017 <-  
