@@ -1,0 +1,46 @@
+---
+title: "street_closure"
+author: "pc2853"
+date: "November 12, 2018"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+library(tidyverse)
+library(lubridate)
+library(xml2)
+library(rvest)
+library(patchwork)
+```
+
+copied data import code from incident_EDA:
+```{r}
+street_closure_2017 <-  
+  read_csv('data/Street_Closures_due_to_construction_activities_by_Intersection.csv') %>% 
+  janitor::clean_names() %>% 
+  #recode date/time
+  mutate(work_start_date = mdy_hms(work_start_date),
+         work_end_date = mdy_hms(work_end_date),
+         work_time = round(difftime(work_end_date, work_start_date, 
+                                    units = 'days'), 0)) %>% 
+  #select year 2017
+  filter(year(work_start_date) == 2017) %>% 
+  select(-purpose) %>% 
+  na.omit() 
+```
+
+looking at borough code and # of constructions
+```{r borough trend}
+street_closure_2017 %>% 
+  group_by(borough_code) %>% 
+  summarize(n = n()) %>% 
+  ggplot(aes(x = borough_code, y = n)) + geom_point()+ geom_line() + labs(y = 'Construction frequency')
+```
+
+or working time for each borough code:
+```{r}
+street_closure_2017 %>% 
+  group_by(borough_code, work_time) %>% 
+  ggplot(aes(x = borough_code, y = work_time)) + geom_boxplot()
+```
+
