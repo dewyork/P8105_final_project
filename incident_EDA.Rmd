@@ -124,7 +124,7 @@ incident_dat_2017 =
     mutate(zip_code = as.numeric(zip_code)) 
 
 incident_dat_2017 =  
-  left_join(incident_dat_2017, zip_code_table, by = "zip_code") %>% 
+  left_join(incident_dat_2017, zip_code_table, by = "zip_code") 
 ```
 
 ## Response time by area(neighborhood)

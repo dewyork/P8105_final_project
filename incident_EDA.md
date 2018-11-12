@@ -219,3 +219,24 @@ incident_dat_2017 %>%
     ## Don't know how to automatically pick scale for object of type difftime. Defaulting to continuous.
 
 ![](incident_EDA_files/figure-markdown_github/unnamed-chunk-10-1.png)
+
+Importing the weather data
+--------------------------
+
+``` r
+library(rnoaa)
+
+nyc_weather_2017 = 
+  rnoaa::meteo_pull_monitors("USW00094728", 
+                             var = c("PRCP", "TMIN", "TMAX", "SNOW", "SNWD"), 
+                             date_min = "2017-01-01", 
+                             date_max = "2017-12-31"
+                             ) %>% 
+  mutate(tmin = tmin/10, tmax = tmax/10, prcp = prcp/10) %>% 
+  select(-id)
+```
+
+``` r
+incident_dat_2017 = 
+  left_join(incident_dat_2017, nyc_weather_2017, by = "date")
+```
