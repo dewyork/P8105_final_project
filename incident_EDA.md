@@ -7,14 +7,14 @@ November 10, 2018
 library(tidyverse)
 ```
 
-    ## -- Attaching packages --------------------------------------------------------------- tidyverse 1.2.1 --
+    ## -- Attaching packages ------------------------------------------- tidyverse 1.2.1 --
 
     ## v ggplot2 3.0.0     v purrr   0.2.5
     ## v tibble  1.4.2     v dplyr   0.7.6
-    ## v tidyr   0.8.1     v stringr 1.3.0
+    ## v tidyr   0.8.1     v stringr 1.3.1
     ## v readr   1.1.1     v forcats 0.3.0
 
-    ## -- Conflicts ------------------------------------------------------------------ tidyverse_conflicts() --
+    ## -- Conflicts ---------------------------------------------- tidyverse_conflicts() --
     ## x dplyr::filter() masks stats::filter()
     ## x dplyr::lag()    masks stats::lag()
 
@@ -78,9 +78,10 @@ create frequency by day for the whole year
 ------------------------------------------
 
 ``` r
-incident_dat_2017 %>% mutate(date = date(incident_date_time)) %>%
+incident_dat_2017 %>% 
+  mutate(date = date(incident_date_time)) %>%
   group_by(date) %>% count() %>%
-ggplot(aes(x = date, y = n)) + geom_line() + labs(y = 'Frequency')
+  ggplot(aes(x = date, y = n)) + geom_line() + labs(y = 'Frequency')
 ```
 
 ![](incident_EDA_files/figure-markdown_github/unnamed-chunk-3-1.png)
@@ -124,3 +125,22 @@ incident_dat_2017 %>%
     ## Don't know how to automatically pick scale for object of type difftime. Defaulting to continuous.
 
 ![](incident_EDA_files/figure-markdown_github/unnamed-chunk-6-1.png)
+
+Response time by area(zip\_code)
+--------------------------------
+
+``` r
+incident_dat_2017 %>%
+  group_by(zip_code) %>%
+  summarise(mean_response_time = mean(response_time, na.rm = TRUE)) %>% 
+  mutate(zip_code = forcats::fct_reorder(zip_code, mean_response_time, 
+                                         .asc = TRUE)) %>% 
+  ggplot(aes(x = zip_code, y = mean_response_time)) + 
+  geom_point(size = .5, color = "darkred") +  
+  coord_flip() +
+  theme_bw()
+```
+
+    ## Don't know how to automatically pick scale for object of type difftime. Defaulting to continuous.
+
+![](incident_EDA_files/figure-markdown_github/unnamed-chunk-7-1.png)
