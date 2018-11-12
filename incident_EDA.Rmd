@@ -26,11 +26,14 @@ incident_dat_2017 <-
          street_highway:borough_desc) %>% 
   na.omit() %>% 
 
-  # Added response time(sec) variable
-  mutate(response_time = arrival_date_time - incident_date_time) %>%
-  
+  # Added response time(minute) variable
+  # mutate(response_time = arrival_date_time - incident_date_time) %>%
+  mutate(response_time = difftime(arrival_date_time, incident_date_time, units = 'mins'),
+  # Added hour variable
+  hour = hour(incident_date_time),
+  date = date(incident_date_time),
   # Added incident_month and incident_day variables from incident_date_time
-  mutate(incident_date = as.Date(incident_date_time)) %>% 
+  incident_date = as.Date(incident_date_time)) %>% 
   separate(incident_date, 
            into = c("incident_year", "incident_month", "incident_day"), 
            sep = "-") %>% 
@@ -38,4 +41,40 @@ incident_dat_2017 <-
   mutate(incident_month = as.numeric(incident_month),
          incident_day = as.numeric(incident_day))
 ```
+
+## create frequency by day for the whole year
+```{r}
+incident_dat_2017 %>% mutate(date = date(incident_date_time)) %>%
+  group_by(date) %>% count() %>%
+ggplot(aes(x = date, y = n)) + geom_line() + labs(y = 'Frequency')
+```
+
+## Look at monthly trend in EMS rescue incident
+```{r}
+incident_dat_2017 %>% 
+  group_by(incident_month) %>% count() %>% 
+  ggplot(aes(x = incident_month, y = n)) + geom_line() + 
+  theme(axis.text.x = element_text(angle = 45)) +  labs(y = 'Frequency') +
+  scale_x_continuous(breaks = 1:12, labels = month.name)
+
+```
+
+## Look at hourly trend
+```{r}
+incident_dat_2017 %>% 
+  group_by(hour) %>% 
+  count() %>% 
+  ggplot(aes(x = hour, y = n)) + geom_line() + labs(y = 'Frequency')
+
+```
+
+#And look at lag time (average) by the hour
+```{r}
+incident_dat_2017 %>%
+    group_by(hour) %>% 
+    summarise(mean_response_time = mean(response_time, na.rm = TRUE)) %>% 
+  ggplot(aes(x = hour, y = mean_response_time)) + geom_line() + 
+  labs(y = 'Mean response time (minutes)')
+```
+
 
