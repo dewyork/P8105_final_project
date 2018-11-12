@@ -45,8 +45,12 @@ library(rvest)
     ## 
     ##     guess_encoding
 
-Loaded and tidied data
-----------------------
+``` r
+library(patchwork)
+```
+
+Response time data - Loaded and tidied data
+-------------------------------------------
 
 ``` r
 incident_dat_2017 <-  
@@ -90,6 +94,35 @@ incident_dat_2017 <-
     ## ... ................. ... .......................................................................... ........ .......................................................................... ...... .......................................................................... .... .......................................................................... ... .......................................................................... ... .......................................................................... ........ ..........................................................................
     ## See problems(...) for more details.
 
+Street closure data - Loaded and tidied data
+--------------------------------------------
+
+``` r
+street_closure_2017 <-  
+  read_csv('data/Street_Closures_due_to_construction_activities_by_Intersection.csv') %>% 
+  janitor::clean_names() %>% 
+  #recode date/time
+  mutate(work_start_date = mdy_hms(work_start_date),
+         work_end_date = mdy_hms(work_end_date),
+         work_time = round(difftime(work_end_date, work_start_date, 
+                                    units = 'days'), 0)) %>% 
+  #select year 2017
+  filter(year(work_start_date) == 2017) %>% 
+  select(-purpose) %>% 
+  na.omit() 
+```
+
+    ## Parsed with column specification:
+    ## cols(
+    ##   NODEID = col_integer(),
+    ##   ONSTREETNAME = col_character(),
+    ##   FROMSTREETNAME = col_character(),
+    ##   BOROUGH_CODE = col_character(),
+    ##   WORK_START_DATE = col_character(),
+    ##   WORK_END_DATE = col_character(),
+    ##   PURPOSE = col_character()
+    ## )
+
 create frequency by day for the whole year
 ------------------------------------------
 
@@ -100,7 +133,7 @@ incident_dat_2017 %>%
   ggplot(aes(x = date, y = n)) + geom_line() + labs(y = 'Frequency')
 ```
 
-![](incident_EDA_files/figure-markdown_github/unnamed-chunk-3-1.png)
+![](incident_EDA_files/figure-markdown_github/unnamed-chunk-4-1.png)
 
 Look at monthly trend in EMS rescue incident
 --------------------------------------------
@@ -113,7 +146,7 @@ incident_dat_2017 %>%
   scale_x_continuous(breaks = 1:12, labels = month.name)
 ```
 
-![](incident_EDA_files/figure-markdown_github/unnamed-chunk-4-1.png)
+![](incident_EDA_files/figure-markdown_github/unnamed-chunk-5-1.png)
 
 Look at hourly trend
 --------------------
@@ -125,7 +158,7 @@ incident_dat_2017 %>%
   ggplot(aes(x = hour, y = n)) + geom_line() + labs(y = 'Frequency')
 ```
 
-![](incident_EDA_files/figure-markdown_github/unnamed-chunk-5-1.png)
+![](incident_EDA_files/figure-markdown_github/unnamed-chunk-6-1.png)
 
 And look at lag time (average) by the hour
 ==========================================
@@ -140,7 +173,7 @@ incident_dat_2017 %>%
 
     ## Don't know how to automatically pick scale for object of type difftime. Defaulting to continuous.
 
-![](incident_EDA_files/figure-markdown_github/unnamed-chunk-6-1.png)
+![](incident_EDA_files/figure-markdown_github/unnamed-chunk-7-1.png)
 
 Response time by area(zip\_code)
 --------------------------------
@@ -159,7 +192,7 @@ incident_dat_2017 %>%
 
     ## Don't know how to automatically pick scale for object of type difftime. Defaulting to continuous.
 
-![](incident_EDA_files/figure-markdown_github/unnamed-chunk-7-1.png)
+![](incident_EDA_files/figure-markdown_github/unnamed-chunk-8-1.png)
 
 &lt;&lt;&lt;&lt;&lt;&lt;&lt; HEAD
 
@@ -218,7 +251,7 @@ incident_dat_2017 %>%
 
     ## Don't know how to automatically pick scale for object of type difftime. Defaulting to continuous.
 
-![](incident_EDA_files/figure-markdown_github/unnamed-chunk-10-1.png)
+![](incident_EDA_files/figure-markdown_github/unnamed-chunk-11-1.png)
 
 Importing the weather data
 --------------------------
@@ -271,11 +304,10 @@ summary_mean %>%
 
     ## `geom_smooth()` using method = 'loess' and formula 'y ~ x'
 
-![](incident_EDA_files/figure-markdown_github/unnamed-chunk-14-1.png)
+![](incident_EDA_files/figure-markdown_github/unnamed-chunk-15-1.png)
 
 ``` r
-summary_mean %>% 
-  filter(mean_snow > 0) %>% 
+summary_mean %>%  
   ggplot(aes(x = mean_snow, y = mean_response_time)) +
   geom_point() + 
   geom_smooth()
@@ -285,7 +317,31 @@ summary_mean %>%
 
     ## `geom_smooth()` using method = 'loess' and formula 'y ~ x'
 
-![](incident_EDA_files/figure-markdown_github/unnamed-chunk-15-1.png)
+    ## Warning in simpleLoess(y, x, w, span, degree = degree, parametric =
+    ## parametric, : at -1.195
+
+    ## Warning in simpleLoess(y, x, w, span, degree = degree, parametric =
+    ## parametric, : radius 1.428
+
+    ## Warning in simpleLoess(y, x, w, span, degree = degree, parametric =
+    ## parametric, : all data on boundary of neighborhood. make span bigger
+
+    ## Warning in simpleLoess(y, x, w, span, degree = degree, parametric =
+    ## parametric, : pseudoinverse used at -1.195
+
+    ## Warning in simpleLoess(y, x, w, span, degree = degree, parametric =
+    ## parametric, : neighborhood radius 1.195
+
+    ## Warning in simpleLoess(y, x, w, span, degree = degree, parametric =
+    ## parametric, : reciprocal condition number 1
+
+    ## Warning in simpleLoess(y, x, w, span, degree = degree, parametric =
+    ## parametric, : zero-width neighborhood. make span bigger
+
+    ## Warning: Computation failed in `stat_smooth()`:
+    ## NA/NaN/Inf in foreign function call (arg 5)
+
+![](incident_EDA_files/figure-markdown_github/unnamed-chunk-16-1.png)
 
 ``` r
 summary_mean %>% 
@@ -299,7 +355,7 @@ summary_mean %>%
 
     ## `geom_smooth()` using method = 'loess' and formula 'y ~ x'
 
-![](incident_EDA_files/figure-markdown_github/unnamed-chunk-16-1.png)
+![](incident_EDA_files/figure-markdown_github/unnamed-chunk-17-1.png)
 
 ``` r
 summary_mean %>% 
@@ -312,7 +368,7 @@ summary_mean %>%
 
     ## `geom_smooth()` using method = 'loess' and formula 'y ~ x'
 
-![](incident_EDA_files/figure-markdown_github/unnamed-chunk-17-1.png)
+![](incident_EDA_files/figure-markdown_github/unnamed-chunk-18-1.png)
 
 ``` r
 summary_mean %>% 
@@ -325,4 +381,55 @@ summary_mean %>%
 
     ## `geom_smooth()` using method = 'loess' and formula 'y ~ x'
 
-![](incident_EDA_files/figure-markdown_github/unnamed-chunk-18-1.png)
+![](incident_EDA_files/figure-markdown_github/unnamed-chunk-19-1.png)
+
+EDA -- yes or no
+----------------
+
+``` r
+resp_time_prcp = 
+summary_mean %>% 
+  mutate(prcp = mean_prcp > 0) %>% 
+  ggplot(aes(x = prcp, y = mean_response_time)) +
+  geom_violin(aes(fill = factor(prcp)), alpha = .5) +
+  stat_summary(fun.y = mean, geom = "point", size = 4, color = "blue") +
+  labs(
+    title = "Mean response time in rainy conditions",
+    x = "Precipitation",
+    y = "Mean response time"
+  ) +
+  viridis::scale_fill_viridis(
+    name = "Precipitation",
+    discrete = TRUE) +
+  theme(plot.title = element_text(size = 12),
+        strip.background = element_rect(fill = "black"),
+        strip.text = element_text(color = "white", face = "bold"),
+        legend.position = "None") 
+
+resp_time_snow = 
+summary_mean %>% 
+  mutate(snow = mean_snow > 0) %>% 
+  ggplot(aes(x = snow, y = mean_response_time)) +
+  geom_violin(aes(fill = factor(snow)), alpha = .5) +
+  stat_summary(fun.y = mean, geom = "point", size = 4, color = "blue") +
+  labs(
+    title = "Mean response time in snowy conditions",
+    y = "Mean response time"
+  ) +
+  viridis::scale_fill_viridis(
+    name = "Snow",
+    discrete = TRUE) +
+  theme(plot.title = element_text(size = 12),
+        strip.background = element_rect(fill = "black"),
+        strip.text = element_text(color = "white", face = "bold"),
+        legend.position = "None") 
+
+resp_time_prcp + resp_time_snow
+```
+
+    ## Don't know how to automatically pick scale for object of type difftime. Defaulting to continuous.
+    ## Don't know how to automatically pick scale for object of type difftime. Defaulting to continuous.
+
+![](incident_EDA_files/figure-markdown_github/unnamed-chunk-20-1.png)
+
+Mean response time seems related to snow but not precipitation.

@@ -10,9 +10,10 @@ library(tidyverse)
 library(lubridate)
 library(xml2)
 library(rvest)
+library(patchwork)
 ```
 
-## Loaded and tidied data
+## Response time data - Loaded and tidied data
 ```{r}
 incident_dat_2017 <-  
   read_csv('data/Incidents_Responded_to_by_Fire_Companies.csv',
@@ -42,6 +43,22 @@ incident_dat_2017 <-
   select(-incident_year) %>% 
   mutate(incident_month = as.numeric(incident_month),
          incident_day = as.numeric(incident_day))
+```
+
+## Street closure data - Loaded and tidied data
+```{r}
+street_closure_2017 <-  
+  read_csv('data/Street_Closures_due_to_construction_activities_by_Intersection.csv') %>% 
+  janitor::clean_names() %>% 
+  #recode date/time
+  mutate(work_start_date = mdy_hms(work_start_date),
+         work_end_date = mdy_hms(work_end_date),
+         work_time = round(difftime(work_end_date, work_start_date, 
+                                    units = 'days'), 0)) %>% 
+  #select year 2017
+  filter(year(work_start_date) == 2017) %>% 
+  select(-purpose) %>% 
+  na.omit() 
 ```
 
 ## create frequency by day for the whole year
@@ -183,8 +200,7 @@ summary_mean %>%
 ```
 
 ```{r}
-summary_mean %>% 
-  filter(mean_snow > 0) %>% 
+summary_mean %>%  
   ggplot(aes(x = mean_snow, y = mean_response_time)) +
   geom_point() + 
   geom_smooth()
@@ -212,5 +228,46 @@ summary_mean %>%
   geom_smooth()
 ```
 
+## EDA -- yes or no ######
+```{r}
+resp_time_prcp = 
+summary_mean %>% 
+  mutate(prcp = mean_prcp > 0) %>% 
+  ggplot(aes(x = prcp, y = mean_response_time)) +
+  geom_violin(aes(fill = factor(prcp)), alpha = .5) +
+  stat_summary(fun.y = mean, geom = "point", size = 4, color = "blue") +
+  labs(
+    title = "Mean response time in rainy conditions",
+    x = "Precipitation",
+    y = "Mean response time"
+  ) +
+  viridis::scale_fill_viridis(
+    name = "Precipitation",
+    discrete = TRUE) +
+  theme(plot.title = element_text(size = 12),
+        strip.background = element_rect(fill = "black"),
+        strip.text = element_text(color = "white", face = "bold"),
+        legend.position = "None") 
 
+resp_time_snow = 
+summary_mean %>% 
+  mutate(snow = mean_snow > 0) %>% 
+  ggplot(aes(x = snow, y = mean_response_time)) +
+  geom_violin(aes(fill = factor(snow)), alpha = .5) +
+  stat_summary(fun.y = mean, geom = "point", size = 4, color = "blue") +
+  labs(
+    title = "Mean response time in snowy conditions",
+    y = "Mean response time"
+  ) +
+  viridis::scale_fill_viridis(
+    name = "Snow",
+    discrete = TRUE) +
+  theme(plot.title = element_text(size = 12),
+        strip.background = element_rect(fill = "black"),
+        strip.text = element_text(color = "white", face = "bold"),
+        legend.position = "None") 
 
+resp_time_prcp + resp_time_snow
+```
+
+Mean response time seems related to snow but not precipitation. 
