@@ -197,5 +197,25 @@ incident_dat_2017 =
     mutate(zip_code = as.numeric(zip_code)) 
 
 incident_dat_2017 =  
-  left_join(incident_dat_2017, zip_code_table, by = "zip_code")
+  left_join(incident_dat_2017, zip_code_table, by = "zip_code") 
 ```
+
+Response time by area(neighborhood)
+-----------------------------------
+
+``` r
+incident_dat_2017 %>%
+  na.omit(neighborhood) %>% 
+  group_by(neighborhood) %>%
+  summarise(mean_response_time = mean(response_time, na.rm = TRUE)) %>% 
+  mutate(neighborhood = forcats::fct_reorder(neighborhood, mean_response_time, 
+                                         .asc = TRUE)) %>% 
+  ggplot(aes(x = neighborhood, y = mean_response_time)) + 
+  geom_point(size = 1, color = "darkred") +  
+  coord_flip() +
+  theme_bw()
+```
+
+    ## Don't know how to automatically pick scale for object of type difftime. Defaulting to continuous.
+
+![](incident_EDA_files/figure-markdown_github/unnamed-chunk-10-1.png)
