@@ -8,6 +8,8 @@ output: github_document
 ```{r}
 library(tidyverse)
 library(lubridate)
+library(xml2)
+library(rvest)
 ```
 
 ## Loaded and tidied data
@@ -91,5 +93,37 @@ incident_dat_2017 %>%
   theme_bw()
 ```
 
+<<<<<<< HEAD
  
+=======
+## Extract ZIP Code Definitions of New York City Neighborhoods
+```{r fig.height = 8}
+url = "https://www.health.ny.gov/statistics/cancer/registry/appendix/neighborhoods.htm?fbclid=IwAR3N4VlKC1OehRZyEuDYPEAE7AFAEXXIRC11seIBKxA-0fd3g4hL0QvnV20"
+xml = read_html(url)
+
+zip_code_table = 
+  (xml %>% html_nodes(css = "table")) %>% 
+  .[[1]] %>%
+  html_table() %>% 
+  janitor::clean_names() %>%  
+  select(neighborhood, zip_codes) %>% 
+  separate(zip_codes, c("a", "b", "c", "d", "e", "f", "g", "h", "i"), 
+           sep = ",") %>% 
+  gather(key = to_remove, value = zip_code, a:i) %>% 
+  select(-to_remove) %>% 
+  na.omit() %>% 
+  distinct() %>% 
+  mutate(zip_code = as.numeric(zip_code))
+```
+
+## Add neighborhood variable
+```{r}
+# To match zip_code to neighborhood table, converted it to numeric
+incident_dat_2017 = 
+  incident_dat_2017 %>% 
+    mutate(zip_code = as.numeric(zip_code)) 
+
+incident_dat_2017 =  
+  left_join(incident_dat_2017, zip_code_table, by = "zip_code")
+```
 
