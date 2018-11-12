@@ -236,7 +236,93 @@ nyc_weather_2017 =
   select(-id)
 ```
 
+Combined data with weather data
+-------------------------------
+
 ``` r
 incident_dat_2017 = 
   left_join(incident_dat_2017, nyc_weather_2017, by = "date")
 ```
+
+EDA -- mean response time and mean variables from weather data
+--------------------------------------------------------------
+
+``` r
+summary_mean = 
+incident_dat_2017 %>% 
+  group_by(date) %>% 
+  summarise(mean_response_time = mean(response_time, na.rm = TRUE),
+            mean_prcp = mean(prcp, na.rm = TRUE),
+            mean_snow = mean(snow, na.rm = TRUE),
+            mean_snwd = mean(snwd, na.rm = TRUE),
+            mean_tmax = mean(tmax, na.rm = TRUE),
+            mean_tmin = mean(tmin, na.rm = TRUE))
+```
+
+``` r
+summary_mean %>% 
+  filter(mean_prcp > 0) %>% 
+  ggplot(aes(x = mean_prcp, y = mean_response_time)) +
+  geom_point() + 
+  geom_smooth()
+```
+
+    ## Don't know how to automatically pick scale for object of type difftime. Defaulting to continuous.
+
+    ## `geom_smooth()` using method = 'loess' and formula 'y ~ x'
+
+![](incident_EDA_files/figure-markdown_github/unnamed-chunk-14-1.png)
+
+``` r
+summary_mean %>% 
+  filter(mean_snow > 0) %>% 
+  ggplot(aes(x = mean_snow, y = mean_response_time)) +
+  geom_point() + 
+  geom_smooth()
+```
+
+    ## Don't know how to automatically pick scale for object of type difftime. Defaulting to continuous.
+
+    ## `geom_smooth()` using method = 'loess' and formula 'y ~ x'
+
+![](incident_EDA_files/figure-markdown_github/unnamed-chunk-15-1.png)
+
+``` r
+summary_mean %>% 
+  filter(mean_snwd > 0) %>%
+  ggplot(aes(x = mean_snwd, y = mean_response_time)) +
+  geom_point() + 
+  geom_smooth()
+```
+
+    ## Don't know how to automatically pick scale for object of type difftime. Defaulting to continuous.
+
+    ## `geom_smooth()` using method = 'loess' and formula 'y ~ x'
+
+![](incident_EDA_files/figure-markdown_github/unnamed-chunk-16-1.png)
+
+``` r
+summary_mean %>% 
+  ggplot(aes(x = mean_tmax, y = mean_response_time)) +
+  geom_point() + 
+  geom_smooth()
+```
+
+    ## Don't know how to automatically pick scale for object of type difftime. Defaulting to continuous.
+
+    ## `geom_smooth()` using method = 'loess' and formula 'y ~ x'
+
+![](incident_EDA_files/figure-markdown_github/unnamed-chunk-17-1.png)
+
+``` r
+summary_mean %>% 
+  ggplot(aes(x = mean_tmin, y = mean_response_time)) +
+  geom_point() + 
+  geom_smooth()
+```
+
+    ## Don't know how to automatically pick scale for object of type difftime. Defaulting to continuous.
+
+    ## `geom_smooth()` using method = 'loess' and formula 'y ~ x'
+
+![](incident_EDA_files/figure-markdown_github/unnamed-chunk-18-1.png)

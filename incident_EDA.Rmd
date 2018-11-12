@@ -140,3 +140,77 @@ incident_dat_2017 %>%
   coord_flip() +
   theme_bw()
 ```
+
+## Importing the weather data
+```{r}
+library(rnoaa)
+
+nyc_weather_2017 = 
+  rnoaa::meteo_pull_monitors("USW00094728", 
+                             var = c("PRCP", "TMIN", "TMAX", "SNOW", "SNWD"), 
+                             date_min = "2017-01-01", 
+                             date_max = "2017-12-31"
+                             ) %>% 
+  mutate(tmin = tmin/10, tmax = tmax/10, prcp = prcp/10) %>% 
+  select(-id)
+```
+
+## Combined data with weather data
+```{r}
+incident_dat_2017 = 
+  left_join(incident_dat_2017, nyc_weather_2017, by = "date")
+```
+
+## EDA -- mean response time and mean variables from weather data
+```{r}
+summary_mean = 
+incident_dat_2017 %>% 
+  group_by(date) %>% 
+  summarise(mean_response_time = mean(response_time, na.rm = TRUE),
+            mean_prcp = mean(prcp, na.rm = TRUE),
+            mean_snow = mean(snow, na.rm = TRUE),
+            mean_snwd = mean(snwd, na.rm = TRUE),
+            mean_tmax = mean(tmax, na.rm = TRUE),
+            mean_tmin = mean(tmin, na.rm = TRUE))
+```
+
+```{r}
+summary_mean %>% 
+  filter(mean_prcp > 0) %>% 
+  ggplot(aes(x = mean_prcp, y = mean_response_time)) +
+  geom_point() + 
+  geom_smooth()
+```
+
+```{r}
+summary_mean %>% 
+  filter(mean_snow > 0) %>% 
+  ggplot(aes(x = mean_snow, y = mean_response_time)) +
+  geom_point() + 
+  geom_smooth()
+```
+
+```{r}
+summary_mean %>% 
+  filter(mean_snwd > 0) %>%
+  ggplot(aes(x = mean_snwd, y = mean_response_time)) +
+  geom_point() + 
+  geom_smooth()
+```
+
+```{r}
+summary_mean %>% 
+  ggplot(aes(x = mean_tmax, y = mean_response_time)) +
+  geom_point() + 
+  geom_smooth()
+```
+
+```{r}
+summary_mean %>% 
+  ggplot(aes(x = mean_tmin, y = mean_response_time)) +
+  geom_point() + 
+  geom_smooth()
+```
+
+
+
