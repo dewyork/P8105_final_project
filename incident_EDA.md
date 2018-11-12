@@ -29,6 +29,22 @@ library(lubridate)
     ## 
     ##     date
 
+``` r
+library(xml2)
+library(rvest)
+```
+
+    ## 
+    ## Attaching package: 'rvest'
+
+    ## The following object is masked from 'package:purrr':
+    ## 
+    ##     pluck
+
+    ## The following object is masked from 'package:readr':
+    ## 
+    ##     guess_encoding
+
 Loaded and tidied data
 ----------------------
 
@@ -144,3 +160,42 @@ incident_dat_2017 %>%
     ## Don't know how to automatically pick scale for object of type difftime. Defaulting to continuous.
 
 ![](incident_EDA_files/figure-markdown_github/unnamed-chunk-7-1.png)
+
+&lt;&lt;&lt;&lt;&lt;&lt;&lt; HEAD
+
+======= \#\# Extract ZIP Code Definitions of New York City Neighborhoods
+
+``` r
+url = "https://www.health.ny.gov/statistics/cancer/registry/appendix/neighborhoods.htm?fbclid=IwAR3N4VlKC1OehRZyEuDYPEAE7AFAEXXIRC11seIBKxA-0fd3g4hL0QvnV20"
+xml = read_html(url)
+
+zip_code_table = 
+  (xml %>% html_nodes(css = "table")) %>% 
+  .[[1]] %>%
+  html_table() %>% 
+  janitor::clean_names() %>%  
+  select(neighborhood, zip_codes) %>% 
+  separate(zip_codes, c("a", "b", "c", "d", "e", "f", "g", "h", "i"), 
+           sep = ",") %>% 
+  gather(key = to_remove, value = zip_code, a:i) %>% 
+  select(-to_remove) %>% 
+  na.omit() %>% 
+  distinct() %>% 
+  mutate(zip_code = as.numeric(zip_code))
+```
+
+    ## Warning: Expected 9 pieces. Missing pieces filled with `NA` in 41 rows [1,
+    ## 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, ...].
+
+Add neighborhood variable
+-------------------------
+
+``` r
+# To match zip_code to neighborhood table, converted it to numeric
+incident_dat_2017 = 
+  incident_dat_2017 %>% 
+    mutate(zip_code = as.numeric(zip_code)) 
+
+incident_dat_2017 =  
+  left_join(incident_dat_2017, zip_code_table, by = "zip_code")
+```
