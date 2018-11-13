@@ -97,18 +97,7 @@ incident_dat_2017 %>%
 ```
 
 
-## Response time by area(zip_code)
-```{r fig.height = 8}
-incident_dat_2017 %>%
-  group_by(zip_code) %>%
-  summarise(mean_response_time = mean(response_time, na.rm = TRUE)) %>% 
-  mutate(zip_code = forcats::fct_reorder(zip_code, mean_response_time, 
-                                         .asc = TRUE)) %>% 
-  ggplot(aes(x = zip_code, y = mean_response_time)) + 
-  geom_point(size = .5, color = "darkred") +  
-  coord_flip() +
-  theme_bw()
-```
+
 
 <<<<<<< HEAD
  
@@ -144,19 +133,6 @@ incident_dat_2017 =
   left_join(incident_dat_2017, zip_code_table, by = "zip_code") 
 ```
 
-## Response time by area(neighborhood)
-```{r fig.height = 8}
-incident_dat_2017 %>%
-  na.omit(neighborhood) %>% 
-  group_by(neighborhood) %>%
-  summarise(mean_response_time = mean(response_time, na.rm = TRUE)) %>% 
-  mutate(neighborhood = forcats::fct_reorder(neighborhood, mean_response_time, 
-                                         .asc = TRUE)) %>% 
-  ggplot(aes(x = neighborhood, y = mean_response_time)) + 
-  geom_point(size = 1, color = "darkred") +  
-  coord_flip() +
-  theme_bw()
-```
 
 ## Importing the weather data
 ```{r}
@@ -172,102 +148,4 @@ nyc_weather_2017 =
   select(-id)
 ```
 
-## Combined data with weather data
-```{r}
-incident_dat_2017 = 
-  left_join(incident_dat_2017, nyc_weather_2017, by = "date")
-```
 
-## EDA -- mean response time and mean variables from weather data
-```{r}
-summary_mean = 
-incident_dat_2017 %>% 
-  group_by(date) %>% 
-  summarise(mean_response_time = mean(response_time, na.rm = TRUE),
-            mean_prcp = mean(prcp, na.rm = TRUE),
-            mean_snow = mean(snow, na.rm = TRUE),
-            mean_snwd = mean(snwd, na.rm = TRUE),
-            mean_tmax = mean(tmax, na.rm = TRUE),
-            mean_tmin = mean(tmin, na.rm = TRUE))
-```
-
-```{r}
-summary_mean %>% 
-  filter(mean_prcp > 0) %>% 
-  ggplot(aes(x = mean_prcp, y = mean_response_time)) +
-  geom_point() + 
-  geom_smooth()
-```
-
-```{r}
-summary_mean %>%  
-  ggplot(aes(x = mean_snow, y = mean_response_time)) +
-  geom_point() + 
-  geom_smooth()
-```
-
-```{r}
-summary_mean %>% 
-  filter(mean_snwd > 0) %>%
-  ggplot(aes(x = mean_snwd, y = mean_response_time)) +
-  geom_point() + 
-  geom_smooth()
-```
-
-```{r}
-summary_mean %>% 
-  ggplot(aes(x = mean_tmax, y = mean_response_time)) +
-  geom_point() + 
-  geom_smooth()
-```
-
-```{r}
-summary_mean %>% 
-  ggplot(aes(x = mean_tmin, y = mean_response_time)) +
-  geom_point() + 
-  geom_smooth()
-```
-
-## EDA -- yes or no ######
-```{r}
-resp_time_prcp = 
-summary_mean %>% 
-  mutate(prcp = mean_prcp > 0) %>% 
-  ggplot(aes(x = prcp, y = mean_response_time)) +
-  geom_violin(aes(fill = factor(prcp)), alpha = .5) +
-  stat_summary(fun.y = mean, geom = "point", size = 4, color = "blue") +
-  labs(
-    title = "Mean response time in rainy conditions",
-    x = "Precipitation",
-    y = "Mean response time"
-  ) +
-  viridis::scale_fill_viridis(
-    name = "Precipitation",
-    discrete = TRUE) +
-  theme(plot.title = element_text(size = 12),
-        strip.background = element_rect(fill = "black"),
-        strip.text = element_text(color = "white", face = "bold"),
-        legend.position = "None") 
-
-resp_time_snow = 
-summary_mean %>% 
-  mutate(snow = mean_snow > 0) %>% 
-  ggplot(aes(x = snow, y = mean_response_time)) +
-  geom_violin(aes(fill = factor(snow)), alpha = .5) +
-  stat_summary(fun.y = mean, geom = "point", size = 4, color = "blue") +
-  labs(
-    title = "Mean response time in snowy conditions",
-    y = "Mean response time"
-  ) +
-  viridis::scale_fill_viridis(
-    name = "Snow",
-    discrete = TRUE) +
-  theme(plot.title = element_text(size = 12),
-        strip.background = element_rect(fill = "black"),
-        strip.text = element_text(color = "white", face = "bold"),
-        legend.position = "None") 
-
-resp_time_prcp + resp_time_snow
-```
-
-Mean response time seems related to snow but not precipitation. 
