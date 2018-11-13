@@ -29,7 +29,38 @@ street_closure_2017 <-
   na.omit() 
 ```
 
-looking at borough code and # of constructions
+```{r}
+incident_dat_2017 <-  
+  read_csv('data/Incidents_Responded_to_by_Fire_Companies.csv',
+  col_types = "cicccicciccccccccccciccccccc") %>% 
+  janitor::clean_names() %>% 
+  #recode date/time
+  mutate(incident_date_time = mdy_hms(incident_date_time),
+         arrival_date_time = mdy_hms(arrival_date_time)) %>% 
+  #select year 2017
+  filter(year(incident_date_time) == 2017,
+         incident_type_desc == "300 - Rescue, EMS incident, other") %>% 
+  select(im_incident_key, incident_date_time, arrival_date_time,
+         street_highway:borough_desc) %>% 
+  na.omit() %>% 
+
+  # Added response time(minute) variable
+  # mutate(response_time = arrival_date_time - incident_date_time) %>%
+  mutate(response_time = difftime(arrival_date_time, incident_date_time, units = 'mins'),
+  # Added hour variable
+  hour = hour(incident_date_time),
+  date = date(incident_date_time),
+  # Added incident_month and incident_day variables from incident_date_time
+  incident_date = as.Date(incident_date_time)) %>% 
+  separate(incident_date, 
+           into = c("incident_year", "incident_month", "incident_day"), 
+           sep = "-") %>% 
+  select(-incident_year) %>% 
+  mutate(incident_month = as.numeric(incident_month),
+         incident_day = as.numeric(incident_day))
+```
+
+# looking at borough code and # of constructions
 ```{r borough trend}
 street_closure_2017 %>% 
   group_by(borough_code) %>% 
@@ -37,10 +68,31 @@ street_closure_2017 %>%
   ggplot(aes(x = borough_code, y = n)) + geom_point()+ geom_line() + labs(y = 'Construction frequency')
 ```
 
-or working time for each borough code:
+# or working time for each borough code:
 ```{r}
 street_closure_2017 %>% 
   group_by(borough_code, work_time) %>% 
-  ggplot(aes(x = borough_code, y = work_time)) + geom_boxplot()
+  ggplot(aes(x = borough_code, y = work_time)) + geom_violin()
+```
+
+# combine the data street closure and incident data by date:
+```{r}
+street_closure_2017 = 
+  street_closure_2017 %>% 
+  mutate(date = date(work_start_date))
+
+street_incident_data = 
+  left_join(incident_dat_2017, street_closure_2017, by = "date")
+```
+
+# response time over work time:
+```{r}
+street_incident_data[["work_time"]][is.na(street_incident_data$work_time)]  <- 0
+street_incident_data %>% 
+  group_by(date, work_time) %>% 
+  summarise(mean_response_time = mean(response_time, na.rm = TRUE)) %>% 
+  ggplot(aes(x = work_time, y = mean_response_time)) + geom_point()
+
+  
 ```
 
