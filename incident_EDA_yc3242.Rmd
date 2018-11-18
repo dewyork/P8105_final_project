@@ -30,7 +30,8 @@ incident_dat_2017 <-
 
   # Added response time(minute) variable
   # mutate(response_time = arrival_date_time - incident_date_time) %>%
-  mutate(response_time = difftime(arrival_date_time, incident_date_time, units = 'mins'),
+  mutate(response_time = difftime(arrival_date_time, incident_date_time, 
+                                  units = 'secs'),
   # Added hour variable
   hour = hour(incident_date_time),
   date = date(incident_date_time),
@@ -62,7 +63,7 @@ street_closure_2017 <-
 
 ## Response time by area(zip_code)
 ```{r fig.height = 8}
-incident_dat_2017 %>%
+incident_dat_2017 %>%  
   group_by(zip_code) %>%
   summarise(mean_response_time = mean(response_time, na.rm = TRUE)) %>% 
   mutate(zip_code = forcats::fct_reorder(zip_code, mean_response_time, 
@@ -153,55 +154,58 @@ incident_dat_2017 %>%
             mean_tmin = mean(tmin, na.rm = TRUE))
 ```
 
-```{r}
-summary_mean %>% 
-  filter(mean_prcp > 0) %>% 
-  ggplot(aes(x = mean_prcp, y = mean_response_time)) +
-  geom_point() + 
-  geom_smooth()
-```
-
-```{r}
-summary_mean %>%  
-  ggplot(aes(x = mean_snow, y = mean_response_time)) +
-  geom_point() + 
-  geom_smooth()
-```
-
-```{r}
-summary_mean %>% 
-  filter(mean_snwd > 0) %>%
-  ggplot(aes(x = mean_snwd, y = mean_response_time)) +
-  geom_point() + 
-  geom_smooth()
-```
-
-```{r}
-summary_mean %>% 
-  ggplot(aes(x = mean_tmax, y = mean_response_time)) +
-  geom_point() + 
-  geom_smooth()
-```
-
-```{r}
-summary_mean %>% 
-  ggplot(aes(x = mean_tmin, y = mean_response_time)) +
-  geom_point() + 
-  geom_smooth()
-```
+# ```{r}
+# summary_mean %>% 
+#   filter(mean_prcp > 0) %>% 
+#   ggplot(aes(x = mean_prcp, y = mean_response_time)) +
+#   geom_point() + 
+#   geom_smooth()
+# ```
+# 
+# ```{r}
+# summary_mean %>%  
+#   ggplot(aes(x = mean_snow, y = mean_response_time)) +
+#   geom_point() + 
+#   geom_smooth()
+# ```
+# 
+# ```{r}
+# summary_mean %>% 
+#   filter(mean_snwd > 0) %>%
+#   ggplot(aes(x = mean_snwd, y = mean_response_time)) +
+#   geom_point() + 
+#   geom_smooth()
+# ```
+# 
+# ```{r}
+# summary_mean %>% 
+#   ggplot(aes(x = mean_tmax, y = mean_response_time)) +
+#   geom_point() + 
+#   geom_smooth()
+# ```
+# 
+# ```{r}
+# summary_mean %>% 
+#   ggplot(aes(x = mean_tmin, y = mean_response_time)) +
+#   geom_point() + 
+#   geom_smooth()
+# ```
 
 ## EDA -- yes or no ######
 ```{r}
-resp_time_prcp = 
-summary_mean %>% 
-  mutate(prcp = mean_prcp > 0) %>% 
-  ggplot(aes(x = prcp, y = mean_response_time)) +
+incident_time_summary_joined = 
+inner_join(incident_dat_2017, summary_mean)
+
+incident_time_summary_joined %>% 
+  mutate(prcp = mean_prcp > 0) %>%
+  group_by(date) %>% 
+  ggplot(aes(x = prcp, y = response_time)) +
   geom_violin(aes(fill = factor(prcp)), alpha = .5) +
   stat_summary(fun.y = mean, geom = "point", size = 4, color = "blue") +
   labs(
-    title = "Mean response time in rainy conditions",
+    title = "Response time in rainy conditions",
     x = "Precipitation",
-    y = "Mean response time"
+    y = "Response time"
   ) +
   viridis::scale_fill_viridis(
     name = "Precipitation",
@@ -211,9 +215,9 @@ summary_mean %>%
         strip.text = element_text(color = "white", face = "bold"),
         legend.position = "None") 
 
-resp_time_snow = 
-summary_mean %>% 
+incident_time_summary_joined %>% 
   mutate(snow = mean_snow > 0) %>% 
+  group_by(date) %>% 
   ggplot(aes(x = snow, y = mean_response_time)) +
   geom_violin(aes(fill = factor(snow)), alpha = .5) +
   stat_summary(fun.y = mean, geom = "point", size = 4, color = "blue") +
@@ -233,3 +237,190 @@ resp_time_prcp + resp_time_snow
 ```
 
 Mean response time seems related to snow but not precipitation. 
+
+# ```{r}
+# incident_dat_2017 %>% 
+#   group_by(borough_desc) %>% 
+#   summarize(mean_response_time = mean(response_time, na.rm = TRUE)) %>% 
+#   ggplot(aes(x = borough_desc, y = mean_response_time)) +
+#   geom_point()
+# ```
+
+## number of incident by zip code vs response time by zip code
+```{r}
+incident_dat_2017 %>% 
+  group_by(zip_code) %>% 
+  summarize(n_incident = n(),
+            mean_response_time = mean(response_time, na.rm = TRUE)) %>%
+  ggplot(aes(x = n_incident, y = mean_response_time)) +
+  geom_point() +
+  geom_smooth()
+```
+
+
+### High incidence
+```{r}
+incident_by_date = 
+  incident_dat_2017 %>% 
+  group_by(zip_code, date) %>% 
+  summarize(n_incident = n())  
+  
+incident_by_zipcode = 
+  incident_dat_2017 %>% 
+  group_by(zip_code, date) %>% 
+  summarize(n_incident = n()) %>% 
+  ungroup() %>% 
+  group_by(zip_code) %>% 
+  summarize(mean_incident = mean(n_incident),
+            sd_incident = sd(n_incident),
+            std_high_incident = mean_incident + 2*sd_incident,
+            std_low_incident = mean_incident - 2*sd_incident)
+
+incident_response_time =
+  incident_dat_2017 %>% 
+  group_by(zip_code) %>% 
+  select(zip_code, response_time, date) 
+
+high_incidence = 
+  left_join(incident_by_date, incident_by_zipcode, by = "zip_code") %>% 
+  mutate(high_incidence = (n_incident - std_high_incident) > 0) %>% 
+  select(zip_code, date, high_incidence)
+
+high_incidence_data = 
+  inner_join(incident_dat_2017, high_incidence)
+
+high_incidence_data %>% 
+  filter(zip_code == 10001) %>% 
+  ggplot(aes(x = high_incidence, y = response_time)) +
+  geom_violin(aes(fill = factor(high_incidence)), alpha = .5) +
+  stat_summary(fun.y = mean, geom = "point", size = 4, color = "blue") +
+  labs(
+    title = "Mean response time in rainy conditions",
+    x = "high_incidence",
+    y = "Mean response time"
+  ) +
+  viridis::scale_fill_viridis(
+    name = "high_incidence",
+    discrete = TRUE) +
+  theme(plot.title = element_text(size = 12),
+        strip.background = element_rect(fill = "black"),
+        strip.text = element_text(color = "white", face = "bold"),
+        legend.position = "None") 
+```
+
+## Number of incidence category
+```{r}
+incident_by_date = 
+  incident_dat_2017 %>% 
+  group_by(zip_code, date) %>% 
+  summarize(n_incident = n())  
+  
+incident_by_zipcode = 
+  incident_dat_2017 %>% 
+  group_by(zip_code, date) %>% 
+  summarize(n_incident = n()) %>% 
+  ungroup() %>% 
+  group_by(zip_code) %>% 
+  summarize(mean_incident = mean(n_incident),
+            sd_incident = sd(n_incident),
+            std_high_incident = mean_incident + sd_incident,
+            std_low_incident = mean_incident - sd_incident)
+
+incident_response_time =
+  incident_dat_2017 %>% 
+  group_by(zip_code) %>% 
+  select(zip_code, response_time, date) 
+
+incident_category_data = 
+  left_join(incident_by_date, incident_by_zipcode, by = "zip_code") %>% 
+  mutate(incident_category = 
+           ifelse(((n_incident - std_high_incident) > 0), "high", 
+           ifelse(((std_low_incident - n_incident) > 0), "low", "medium"))) %>% 
+  select(zip_code, date, incident_category)
+
+incid_cate_joined_data = 
+  inner_join(incident_dat_2017, incident_category_data) %>% 
+  na.omit() 
+
+# filtered by zip code representative
+incid_cate_joined_data %>% 
+  filter(zip_code == 10001) %>%  
+  ggplot(aes(x = incident_category, y = response_time)) +
+  geom_violin(aes(fill = factor(incident_category)), alpha = .5) +
+  stat_summary(fun.y = mean, geom = "point", size = 4, color = "blue") +
+  labs(
+    title = "response time by incident category",
+    x = "incident category",
+    y = "Mean response time"
+  ) +
+  viridis::scale_fill_viridis(
+    name = "incident category",
+    discrete = TRUE) +
+  theme(plot.title = element_text(size = 12),
+        strip.background = element_rect(fill = "black"),
+        strip.text = element_text(color = "white", face = "bold"),
+        legend.position = "None") 
+
+# incid_cate_joined_data %>%  
+#   group_by(incident_category) %>% 
+#   summarize(mean_response_time = mean(response_time)) %>% 
+#   ggplot(aes(x = incident_category, y = mean_response_time)) +
+#   geom_point()
+
+incid_cate_joined_data %>%  
+  group_by(incident_category) %>% 
+  ggplot(aes(x = incident_category, y = response_time)) +
+  geom_violin(aes(fill = factor(incident_category)), alpha = .5) +
+  stat_summary(fun.y = mean, geom = "point", size = 4, color = "blue") +
+  scale_y_continuous(limits = c(0,500))
+```
+
+## Number of incidence category
+```{r}
+incident_by_date = 
+  incident_dat_2017 %>% 
+  group_by(zip_code, date) %>% 
+  summarize(n_incident = n())  
+  
+incident_by_zipcode = 
+  incident_dat_2017 %>% 
+  group_by(zip_code, date) %>% 
+  summarize(n_incident = n()) %>% 
+  ungroup() %>% 
+  group_by(zip_code) %>% 
+  summarize(mean_incident = mean(n_incident))
+
+incident_response_time =
+  incident_dat_2017 %>% 
+  group_by(zip_code) %>% 
+  select(zip_code, response_time, date) 
+
+incident_category_data = 
+  left_join(incident_by_date, incident_by_zipcode, by = "zip_code") %>% 
+  mutate(incident_category = 
+           ifelse(((n_incident - mean_incident) >= 0), "high", "low")) %>%  
+  select(zip_code, date, incident_category)
+
+incid_cate_joined_data = 
+  inner_join(incident_dat_2017, incident_category_data) %>% 
+  na.omit() 
+
+incid_cate_joined_data %>% 
+  group_by(incident_category, zip_code) %>% 
+  summarize(mean_response_time = mean(response_time, na.rm = TRUE)) %>% 
+  ggplot(aes(x = incident_category, y = mean_response_time)) +
+  geom_violin(aes(fill = factor(incident_category)), alpha = .5) +
+  stat_summary(fun.y = mean, geom = "point", size = 4, color = "blue") +
+  labs(
+    title = "Mean response time by incidence category",
+    x = "incident category",
+    y = "Mean response time"
+  ) +
+  viridis::scale_fill_viridis(
+    name = "incident category",
+    discrete = TRUE) +
+  theme(plot.title = element_text(size = 12),
+        strip.background = element_rect(fill = "black"),
+        strip.text = element_text(color = "white", face = "bold"),
+        legend.position = "None") 
+```
