@@ -40,47 +40,19 @@ incident_dat_2017 <-
   separate(incident_date, 
            into = c("incident_year", "incident_month", "incident_day"), 
            sep = "-") %>% 
-  select(-incident_year) %>% 
+  select(-incident_year, -street_highway, -borough_desc) %>% 
   mutate(incident_month = as.numeric(incident_month),
          incident_day = as.numeric(incident_day))
 ```
 
-## Street closure data - Loaded and tidied data
-```{r}
-street_closure_2017 <-  
-  read_csv('data/Street_Closures_due_to_construction_activities_by_Intersection.csv') %>% 
-  janitor::clean_names() %>% 
-  #recode date/time
-  mutate(work_start_date = mdy_hms(work_start_date),
-         work_end_date = mdy_hms(work_end_date),
-         work_time = round(difftime(work_end_date, work_start_date, 
-                                    units = 'days'), 0)) %>% 
-  #select year 2017
-  filter(year(work_start_date) == 2017) %>% 
-  select(-purpose) %>% 
-  na.omit() 
-```
-
-## Response time by area(zip_code)
-```{r fig.height = 8}
-incident_dat_2017 %>%  
-  group_by(zip_code) %>%
-  summarise(mean_response_time = mean(response_time, na.rm = TRUE)) %>% 
-  mutate(zip_code = forcats::fct_reorder(zip_code, mean_response_time, 
-                                         .asc = TRUE)) %>% 
-  ggplot(aes(x = zip_code, y = mean_response_time)) + 
-  geom_point(size = .5, color = "darkred") +  
-  coord_flip() +
-  theme_bw()
-```
 
 ## Extract ZIP Code Definitions of New York City Neighborhoods
 ```{r fig.height = 8}
 url = "https://www.health.ny.gov/statistics/cancer/registry/appendix/neighborhoods.htm?fbclid=IwAR3N4VlKC1OehRZyEuDYPEAE7AFAEXXIRC11seIBKxA-0fd3g4hL0QvnV20"
+
 xml = read_html(url)
 
-zip_code_table = 
-  (xml %>% html_nodes(css = "table")) %>% 
+zip_code_table = (xml %>% html_nodes(css = "table")) %>% 
   .[[1]] %>%
   html_table() %>% 
   janitor::clean_names() %>%  
@@ -104,6 +76,20 @@ incident_dat_2017 =
 incident_dat_2017 =  
   left_join(incident_dat_2017, zip_code_table, by = "zip_code") 
 ```
+
+## Response time by area(zip_code)
+```{r fig.height = 8}
+incident_dat_2017 %>%  
+  group_by(zip_code) %>%
+  summarise(mean_response_time = mean(response_time, na.rm = TRUE)) %>% 
+  mutate(zip_code = forcats::fct_reorder(zip_code, mean_response_time, 
+                                         .asc = TRUE)) %>% 
+  ggplot(aes(x = zip_code, y = mean_response_time)) + 
+  geom_point(size = .5, color = "darkred") +  
+  coord_flip() +
+  theme_bw()
+```
+
 
 ## Response time by area(neighborhood)
 ```{r fig.height = 8}
@@ -154,40 +140,53 @@ incident_dat_2017 %>%
             mean_tmin = mean(tmin, na.rm = TRUE))
 ```
 
+## Prcp category
+```{r}
+nyc_weather_2017 = 
+  nyc_weather_2017 %>%
+  mutate(prcp_ctg = 
+           ifelse(prcp == 0, "NA",
+           ifelse((prcp > 0 & prcp <= 25), "low",
+           ifelse((prcp > 25 & prcp <= 60), "medium", "high"))))
+
+incident_dat_2017 = 
+  inner_join(incident_dat_2017, nyc_weather_2017, by = "date")
+
+incident_dat_2017 %>%
+  group_by(date) %>% 
+  filter(prcp > 0, 
+         neighborhood == "Kingsbridge and Riverdale") %>%
+  ggplot(aes(x = prcp_ctg, y = response_time)) +
+  geom_violin(aes(fill = factor(prcp_ctg)), alpha = .5) +
+  stat_summary(fun.y = mean, geom = "point", size = 4, color = "blue")
+```
+#
 # ```{r}
-# summary_mean %>% 
-#   filter(mean_prcp > 0) %>% 
-#   ggplot(aes(x = mean_prcp, y = mean_response_time)) +
-#   geom_point() + 
-#   geom_smooth()
-# ```
-# 
-# ```{r}
-# summary_mean %>%  
+# summary_mean %>%
 #   ggplot(aes(x = mean_snow, y = mean_response_time)) +
-#   geom_point() + 
+#   geom_point() +
 #   geom_smooth()
 # ```
-# 
+#
 # ```{r}
-# summary_mean %>% 
+# summary_mean %>%
 #   filter(mean_snwd > 0) %>%
 #   ggplot(aes(x = mean_snwd, y = mean_response_time)) +
-#   geom_point() + 
+#   geom_point() +
 #   geom_smooth()
 # ```
-# 
+#
 # ```{r}
-# summary_mean %>% 
+# summary_mean %>%
 #   ggplot(aes(x = mean_tmax, y = mean_response_time)) +
-#   geom_point() + 
+#   geom_point() +
 #   geom_smooth()
 # ```
-# 
+#
 # ```{r}
-# summary_mean %>% 
+# summary_mean %>%
 #   ggplot(aes(x = mean_tmin, y = mean_response_time)) +
-#   geom_point() + 
+#   geom_point() +
 #   geom_smooth()
 # ```
 
@@ -423,4 +422,21 @@ incid_cate_joined_data %>%
         strip.background = element_rect(fill = "black"),
         strip.text = element_text(color = "white", face = "bold"),
         legend.position = "None") 
+```
+
+
+## Street closure data - Loaded and tidied data
+```{r}
+street_closure_2017 <-  
+  read_csv('data/Street_Closures_due_to_construction_activities_by_Intersection.csv') %>% 
+  janitor::clean_names() %>% 
+  #recode date/time
+  mutate(work_start_date = mdy_hms(work_start_date),
+         work_end_date = mdy_hms(work_end_date),
+         work_time = round(difftime(work_end_date, work_start_date, 
+                                    units = 'days'), 0)) %>% 
+  #select year 2017
+  filter(year(work_start_date) == 2017) %>% 
+  select(-purpose) %>% 
+  na.omit() 
 ```
