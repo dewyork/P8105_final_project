@@ -439,3 +439,10 @@ incident_dat_2017 %>%
   stat_summary(fun.y = mean, geom = "point", size = 4, color = "blue")
 ```
 
+## 5min 
+```{r}
+incident_5min = 
+incident_dat_2017 %>% 
+  mutate(over_5min = ifelse(response_time > 5, "5min+", "5min-"))
+```
+

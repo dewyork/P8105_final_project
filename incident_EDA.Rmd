@@ -377,7 +377,21 @@ incident_weather %>%
   knitr::kable(digits = 3)
 ```
 
-
+## Tabulized 7min- 7min+ snow in winter
+```{r}
+incident_weather %>% 
+  mutate(prcp = prcp > 0,
+         snow = snow > 0,
+         over_7min = ifelse(response_time > 7, "7min+", "7min-"),
+         season = 
+           ifelse(incident_month %in% 9:11, "Fall",
+           ifelse(incident_month %in% c(12,1,2), "Winter",
+           ifelse(incident_month %in% 3:5, "Spring", "Summer")))) %>% 
+  filter(season == "Winter") %>% 
+  group_by(over_7min) %>%
+  summarize(snow_prop = mean(snow)) %>% 
+  knitr::kable(digits = 3)
+```
 
 ## neighborhood
 ```{r}
