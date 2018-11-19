@@ -148,4 +148,13 @@ nyc_weather_2017 =
   select(-id)
 ```
 
+## Add season variable
+```{r}
+incident_dat_2017 = 
+  incident_dat_2017 %>%
+  mutate(season = 
+           ifelse(incident_month %in% 9:11, "Fall",
+           ifelse(incident_month %in% c(12,1,2), "Winter",
+           ifelse(incident_month %in% 3:5, "Spring", "Summer"))))
+```
 
