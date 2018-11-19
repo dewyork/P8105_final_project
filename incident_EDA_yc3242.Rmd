@@ -170,16 +170,24 @@ incident_dat_2017 =
            ifelse(incident_month %in% c(12,1,2), "Winter",
            ifelse(incident_month %in% 3:5, "Spring", "Summer"))))
 
-incident_dat_2017 = 
-  inner_join(incident_dat_2017, nyc_weather_2017, by = "date")
+# incident_dat_2017 %>%
+#   group_by(zip_code, season) %>% 
+#   summarise(mean_response_time = mean(response_time)) %>% 
+#   ggplot(aes(x = season, y = mean_response_time)) +
+#   geom_violin(aes(fill = factor(season)), alpha = .5) +
+#   stat_summary(fun.y = mean, geom = "point", size = 4, color = "blue")
+# 
+# incident_dat_2017 %>%
+#   group_by(season) %>% 
+#   summarise(mean_response_time = mean(response_time)) %>% 
+#   ggplot(aes(x = season, y = mean_response_time)) +
+#   geom_point()
 
-incident_dat_2017 %>%
-  group_by(date) %>% 
-  filter(prcp > 0, 
-         neighborhood == "Kingsbridge and Riverdale") %>%
-  ggplot(aes(x = prcp_ctg, y = response_time)) +
-  geom_violin(aes(fill = factor(prcp_ctg)), alpha = .5) +
-  stat_summary(fun.y = mean, geom = "point", size = 4, color = "blue")
+# incident_dat_2017 %>%
+#   group_by(season) %>% 
+#   ggplot(aes(x = season, y = response_time)) +
+#   geom_violin(aes(fill = factor(season)), alpha = .5) +
+#   stat_summary(fun.y = mean, geom = "point", size = 4, color = "blue")
 ```
 
 ## EDA -- yes or no ######
@@ -187,14 +195,14 @@ incident_dat_2017 %>%
 incident_time_summary_joined = 
 inner_join(incident_dat_2017, summary_mean)
 
-incident_time_summary_joined %>% 
+resp_time_prcp =
+  incident_time_summary_joined %>% 
   mutate(prcp = mean_prcp > 0) %>%
-  group_by(date) %>% 
-  ggplot(aes(x = prcp, y = response_time)) +
+  ggplot(aes(x = prcp, y = mean_response_time)) +
   geom_violin(aes(fill = factor(prcp)), alpha = .5) +
   stat_summary(fun.y = mean, geom = "point", size = 4, color = "blue") +
   labs(
-    title = "Response time in rainy conditions",
+    title = "Mean Response time in rainy conditions",
     x = "Precipitation",
     y = "Response time"
   ) +
@@ -206,15 +214,16 @@ incident_time_summary_joined %>%
         strip.text = element_text(color = "white", face = "bold"),
         legend.position = "None") 
 
-incident_time_summary_joined %>% 
+resp_time_snow =
+  incident_time_summary_joined %>% 
   mutate(snow = mean_snow > 0) %>% 
-  group_by(date) %>% 
   ggplot(aes(x = snow, y = mean_response_time)) +
   geom_violin(aes(fill = factor(snow)), alpha = .5) +
   stat_summary(fun.y = mean, geom = "point", size = 4, color = "blue") +
   labs(
     title = "Mean response time in snowy conditions",
-    y = "Mean response time"
+    y = "Mean response time",
+    x = "Snow"
   ) +
   viridis::scale_fill_viridis(
     name = "Snow",
@@ -229,75 +238,18 @@ resp_time_prcp + resp_time_snow
 
 Mean response time seems related to snow but not precipitation. 
 
-# ```{r}
-# incident_dat_2017 %>% 
-#   group_by(borough_desc) %>% 
-#   summarize(mean_response_time = mean(response_time, na.rm = TRUE)) %>% 
-#   ggplot(aes(x = borough_desc, y = mean_response_time)) +
-#   geom_point()
-# ```
 
 ## number of incident by zip code vs response time by zip code
 ```{r}
 incident_dat_2017 %>% 
-  group_by(zip_code) %>% 
-  summarize(n_incident = n(),
-            mean_response_time = mean(response_time, na.rm = TRUE)) %>%
-  ggplot(aes(x = n_incident, y = mean_response_time)) +
+  group_by(date) %>% 
+  summarize(n_incident = n()) %>%
+  ggplot(aes(x = n_incident, y = response_time)) +
   geom_point() +
   geom_smooth()
 ```
 
 
-### High incidence
-```{r}
-incident_by_date = 
-  incident_dat_2017 %>% 
-  group_by(zip_code, date) %>% 
-  summarize(n_incident = n())  
-  
-incident_by_zipcode = 
-  incident_dat_2017 %>% 
-  group_by(zip_code, date) %>% 
-  summarize(n_incident = n()) %>% 
-  ungroup() %>% 
-  group_by(zip_code) %>% 
-  summarize(mean_incident = mean(n_incident),
-            sd_incident = sd(n_incident),
-            std_high_incident = mean_incident + 2*sd_incident,
-            std_low_incident = mean_incident - 2*sd_incident)
-
-incident_response_time =
-  incident_dat_2017 %>% 
-  group_by(zip_code) %>% 
-  select(zip_code, response_time, date) 
-
-high_incidence = 
-  left_join(incident_by_date, incident_by_zipcode, by = "zip_code") %>% 
-  mutate(high_incidence = (n_incident - std_high_incident) > 0) %>% 
-  select(zip_code, date, high_incidence)
-
-high_incidence_data = 
-  inner_join(incident_dat_2017, high_incidence)
-
-high_incidence_data %>% 
-  filter(zip_code == 10001) %>% 
-  ggplot(aes(x = high_incidence, y = response_time)) +
-  geom_violin(aes(fill = factor(high_incidence)), alpha = .5) +
-  stat_summary(fun.y = mean, geom = "point", size = 4, color = "blue") +
-  labs(
-    title = "Mean response time in rainy conditions",
-    x = "high_incidence",
-    y = "Mean response time"
-  ) +
-  viridis::scale_fill_viridis(
-    name = "high_incidence",
-    discrete = TRUE) +
-  theme(plot.title = element_text(size = 12),
-        strip.background = element_rect(fill = "black"),
-        strip.text = element_text(color = "white", face = "bold"),
-        legend.position = "None") 
-```
 
 ## Number of incidence category
 ```{r}
@@ -364,6 +316,19 @@ incid_cate_joined_data %>%
   geom_violin(aes(fill = factor(incident_category)), alpha = .5) +
   stat_summary(fun.y = mean, geom = "point", size = 4, color = "blue") +
   scale_y_continuous(limits = c(0,500))
+
+incid_cate_joined_data %>%  
+  group_by(date, incident_category) %>% 
+  summarise(mean_response_time = mean(response_time)) %>% 
+  ggplot(aes(x = incident_category, y = mean_response_time)) +
+  geom_violin(aes(fill = factor(incident_category)), alpha = .5) +
+  stat_summary(fun.y = mean, geom = "point", size = 4, color = "blue")
+
+incid_cate_joined_data %>%  
+  group_by(date, incident_category) %>%  
+  ggplot(aes(x = incident_category, y = response_time)) +
+  geom_violin(aes(fill = factor(incident_category)), alpha = .5) +
+  stat_summary(fun.y = mean, geom = "point", size = 4, color = "blue")
 ```
 
 ## Number of incidence category
@@ -432,3 +397,6 @@ street_closure_2017 <-
   select(-purpose) %>% 
   na.omit() 
 ```
+
+
+## Mean response time category
