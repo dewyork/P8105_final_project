@@ -413,12 +413,37 @@ low_resp_area =
 
 resp_area_bind = 
   bind_rows(high_resp_area, low_resp_area)
+# 
+# resp_area_bind %>%  
+#   group_by(incident_month, resp_area) %>% 
+#   summarise(mean_resp_time = mean(response_time)) %>% 
+#   ggplot(aes(x = incident_month, y = mean_resp_time)) +
+#   geom_line(aes(color = resp_area)) 
+# 
+# resp_area_bind %>%  
+#   group_by(incident_month, resp_area) %>% 
+#   ggplot(aes(x = incident_month, y = response_time)) +
+#   geom_smooth(aes(color = resp_area), se = FALSE)
 
 resp_area_bind %>%  
   group_by(incident_month, resp_area) %>% 
-  summarise(mean_resp_time = mean(response_time)) %>% 
-  ggplot(aes(x = incident_month, y = mean_resp_time)) +
-  geom_point() +
-  facet_grid(~resp_area)
+  ggplot(aes(x = hour, y = response_time)) +
+  geom_smooth(aes(color = resp_area), se = FALSE)
+
+incident_dat_2017 %>% 
+  group_by(neighborhood) %>%
+  ggplot(aes(x = hour, y = response_time)) +
+  geom_smooth(aes(color = neighborhood), se = FALSE) +
+  theme(legend.position = "None")
+```
+
+## Categorized hour of the day
+```{r}
+incident_dat_2017 = 
+  incident_dat_2017 %>% 
+  mutate(hour_of_day = 
+           ifelse(hour %in% 6:12, "morning",
+           ifelse(hour %in% 13:17, "afternoon",
+           ifelse(hour %in% 18:23, "night","dawn"))))
 ```
 
