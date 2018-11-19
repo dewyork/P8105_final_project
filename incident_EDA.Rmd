@@ -160,6 +160,16 @@ incid_cate_joined_data =
   na.omit() 
 ```
 
+## added hour of the day variable
+```{r}
+incident_hour_of_day = 
+  incident_dat_2017 %>% 
+  mutate(hour_of_day = 
+           ifelse(hour %in% 6:12, "morning",
+           ifelse(hour %in% 13:17, "afternoon",
+           ifelse(hour %in% 18:23, "night","dawn"))))
+```
+
 ## Street closure data 
 ```{r}
 street_closure_2017 <-  
@@ -215,7 +225,6 @@ incident_dat_2017 %>%
   group_by(hour) %>% 
   count() %>% 
   ggplot(aes(x = hour, y = n)) + geom_line() + labs(y = 'Frequency')
-
 ```
 
 #And look at lag time (average) by the hour
@@ -227,4 +236,82 @@ incident_dat_2017 %>%
   labs(y = 'Mean response time (minutes)')
 ```
 
+```{r}
+incident_dat_2017 %>%
+    group_by(hour) %>% 
+  ggplot(aes(x = hour, y = response_time)) + 
+  geom_smooth(se = FALSE) 
+```
 
+
+```{r}
+library(grid)
+
+hourly_freq = 
+  incident_dat_2017 %>% 
+  group_by(hour) %>% 
+  count() %>% 
+  ggplot(aes(x = hour, y = n)) + 
+  geom_line() +
+  labs(x = "Hour of the day", y = "Frequency") +
+  theme_bw()
+
+hourly_time = 
+  incident_dat_2017 %>%
+    group_by(hour) %>% 
+  ggplot(aes(x = hour, y = response_time)) + 
+  geom_smooth(se = FALSE) +
+  labs(x = "Hour of the day", y = "Mean response time") +
+  theme_bw()
+
+grid.newpage()
+grid.draw(rbind(ggplotGrob(hourly_freq), ggplotGrob(hourly_time), size = "last"))
+```
+
+
+### rainy day vs snowy day
+```{r}
+resp_time_prcp =
+  incident_weather %>% 
+  mutate(prcp = prcp > 0) %>%
+  group_by(date, prcp) %>% 
+  summarise(mean_resp_time = mean(response_time)) %>% 
+  ggplot(aes(x = prcp, y = mean_resp_time)) +
+  geom_violin(aes(fill = factor(prcp)), alpha = .5) +
+  stat_summary(fun.y = mean, geom = "point", size = 4, color = "blue") +
+  labs(
+    title = "Mean Response time in rainy conditions",
+    x = "Precipitation",
+    y = "Response time"
+  ) +
+  viridis::scale_fill_viridis(
+    name = "Precipitation",
+    discrete = TRUE) +
+  theme(plot.title = element_text(size = 12),
+        strip.background = element_rect(fill = "black"),
+        strip.text = element_text(color = "white", face = "bold"),
+        legend.position = "None") 
+
+resp_time_snow =
+  incident_weather %>% 
+  mutate(snow = snow > 0) %>%
+  group_by(date, snow) %>% 
+  summarise(mean_resp_time = mean(response_time)) %>% 
+  ggplot(aes(x = snow, y = mean_resp_time)) +
+  geom_violin(aes(fill = factor(snow)), alpha = .5) +
+  stat_summary(fun.y = mean, geom = "point", size = 4, color = "blue") +
+  labs(
+    title = "Mean response time in snowy conditions",
+    y = "Mean response time",
+    x = "Snow"
+  ) +
+  viridis::scale_fill_viridis(
+    name = "Snow",
+    discrete = TRUE) +
+  theme(plot.title = element_text(size = 12),
+        strip.background = element_rect(fill = "black"),
+        strip.text = element_text(color = "white", face = "bold"),
+        legend.position = "None") 
+
+resp_time_prcp + resp_time_snow
+```
