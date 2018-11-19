@@ -341,3 +341,40 @@ resp_time_snow =
 resp_time_prcp + resp_time_snow
 ```
 
+
+## neighborhood
+```{r}
+library(grid)
+
+neighborhood_freq = 
+  incident_dat_2017 %>% 
+  na.omit() %>% 
+  group_by(neighborhood) %>% 
+  count() %>% 
+  ungroup() %>% 
+  mutate(neighborhood = forcats::fct_reorder(neighborhood, n, 
+                                         .asc = TRUE)) %>% 
+  ggplot(aes(x = neighborhood, y = n)) + 
+  geom_point() +
+  labs(x = "neighborhood", y = "Frequency") +
+  theme_bw() +
+  theme(axis.text.x = element_text(angle = 45)) 
+
+neighborhood_time = 
+  incident_dat_2017 %>%
+  na.omit() %>% 
+  group_by(neighborhood) %>% 
+  summarise(mean_resp_time = mean(response_time)) %>% 
+  mutate(neighborhood = forcats::fct_reorder(neighborhood, mean_resp_time, 
+                                         .asc = TRUE)) %>% 
+  ggplot(aes(x = neighborhood, y = mean_resp_time)) + 
+  geom_point() +
+  labs(x = "neighborhood", y = "Mean response time") +
+  theme_bw() +
+  theme(axis.text.x = element_text(angle = 45))
+
+grid.newpage()
+grid.draw(rbind(ggplotGrob(neighborhood_freq), ggplotGrob(neighborhood_time), size = "last"))
+```
+
+

@@ -7,14 +7,14 @@ November 10, 2018
 library(tidyverse)
 ```
 
-    ## -- Attaching packages ------------------------------------------- tidyverse 1.2.1 --
+    ## -- Attaching packages -------------------------------------------- tidyverse 1.2.1 --
 
     ## v ggplot2 3.0.0     v purrr   0.2.5
     ## v tibble  1.4.2     v dplyr   0.7.6
     ## v tidyr   0.8.1     v stringr 1.3.1
     ## v readr   1.1.1     v forcats 0.3.0
 
-    ## -- Conflicts ---------------------------------------------- tidyverse_conflicts() --
+    ## -- Conflicts ----------------------------------------------- tidyverse_conflicts() --
     ## x dplyr::filter() masks stats::filter()
     ## x dplyr::lag()    masks stats::lag()
 
@@ -49,53 +49,85 @@ library(rvest)
 library(patchwork)
 ```
 
+##### Data sets
+
 Response time data - Loaded and tidied data
 -------------------------------------------
 
-``` r
-incident_dat_2017 <-  
-  read_csv('data/Incidents_Responded_to_by_Fire_Companies.csv',
-  col_types = "cicccicciccccccccccciccccccc") %>% 
-  janitor::clean_names() %>% 
-  #recode date/time
-  mutate(incident_date_time = mdy_hms(incident_date_time),
-         arrival_date_time = mdy_hms(arrival_date_time)) %>% 
-  #select year 2017
-  filter(year(incident_date_time) == 2017,
-         incident_type_desc == "300 - Rescue, EMS incident, other") %>% 
-  select(im_incident_key, incident_date_time, arrival_date_time,
-         street_highway:borough_desc) %>% 
-  na.omit() %>% 
+Added neighborhood variable
+---------------------------
 
-  # Added response time(minute) variable
-  # mutate(response_time = arrival_date_time - incident_date_time) %>%
-  mutate(response_time = difftime(arrival_date_time, incident_date_time, units = 'mins'),
-  # Added hour variable
-  hour = hour(incident_date_time),
-  date = date(incident_date_time),
-  # Added incident_month and incident_day variables from incident_date_time
-  incident_date = as.Date(incident_date_time)) %>% 
-  separate(incident_date, 
-           into = c("incident_year", "incident_month", "incident_day"), 
-           sep = "-") %>% 
-  select(-incident_year) %>% 
-  mutate(incident_month = as.numeric(incident_month),
-         incident_day = as.numeric(incident_day))
+Add weather-related variable
+----------------------------
+
+Added prcp category variable
+----------------------------
+
+Added season variable
+---------------------
+
+``` r
+incident_season = 
+  incident_dat_2017 %>%
+  mutate(season = 
+           ifelse(incident_month %in% 9:11, "Fall",
+           ifelse(incident_month %in% c(12,1,2), "Winter",
+           ifelse(incident_month %in% 3:5, "Spring", "Summer"))))
 ```
 
-    ## Warning: Unnamed `col_types` should have the same length as `col_names`.
-    ## Using smaller of the two.
+Added incident response time category variable
+----------------------------------------------
 
-    ## Warning in rbind(names(probs), probs_f): number of columns of result is not
-    ## a multiple of vector length (arg 1)
+``` r
+incident_by_date = 
+  incident_dat_2017 %>% 
+  group_by(zip_code, date) %>% 
+  summarize(n_incident = n())  
+  
+incident_by_zipcode = 
+  incident_dat_2017 %>% 
+  group_by(zip_code, date) %>% 
+  summarize(n_incident = n()) %>% 
+  ungroup() %>% 
+  group_by(zip_code) %>% 
+  summarize(mean_incident = mean(n_incident),
+            sd_incident = sd(n_incident),
+            std_high_incident = mean_incident + sd_incident,
+            std_low_incident = mean_incident - sd_incident)
 
-    ## Warning: 13119 parsing failures.
-    ## row # A tibble: 5 x 5 col     row col        expected       actual            file                   expected   <int> <chr>      <chr>          <chr>             <chr>                  actual 1    91 FIRE_SPRE~ no trailing c~ " - Beyond build~ 'data/Incidents_Respo~ file 2   199 FIRE_SPRE~ no trailing c~ " - Confined to ~ 'data/Incidents_Respo~ row 3   440 FIRE_SPRE~ no trailing c~ " - Confined to ~ 'data/Incidents_Respo~ col 4   492 FIRE_SPRE~ no trailing c~ " - Confined to ~ 'data/Incidents_Respo~ expected 5   569 FIRE_SPRE~ no trailing c~ " - Confined to ~ 'data/Incidents_Respo~
-    ## ... ................. ... .......................................................................... ........ .......................................................................... ...... .......................................................................... .... .......................................................................... ... .......................................................................... ... .......................................................................... ........ ..........................................................................
-    ## See problems(...) for more details.
+incident_response_time =
+  incident_dat_2017 %>% 
+  group_by(zip_code) %>% 
+  select(zip_code, response_time, date) 
 
-Street closure data - Loaded and tidied data
---------------------------------------------
+incident_category_data = 
+  left_join(incident_by_date, incident_by_zipcode, by = "zip_code") %>% 
+  mutate(incident_category = 
+           ifelse(((n_incident - std_high_incident) > 0), "high", 
+           ifelse(((std_low_incident - n_incident) > 0), "low", "medium"))) %>% 
+  select(zip_code, date, incident_category)
+
+incid_cate_joined_data = 
+  inner_join(incident_dat_2017, incident_category_data) %>% 
+  na.omit() 
+```
+
+    ## Joining, by = c("zip_code", "date")
+
+added hour of the day variable
+------------------------------
+
+``` r
+incident_hour_of_day = 
+  incident_dat_2017 %>% 
+  mutate(hour_of_day = 
+           ifelse(hour %in% 6:12, "morning",
+           ifelse(hour %in% 13:17, "afternoon",
+           ifelse(hour %in% 18:23, "night","dawn"))))
+```
+
+Street closure data
+-------------------
 
 ``` r
 street_closure_2017 <-  
@@ -123,6 +155,11 @@ street_closure_2017 <-
     ##   PURPOSE = col_character()
     ## )
 
+###### EDA
+
+Response time by area(neighborhood)
+-----------------------------------
+
 create frequency by day for the whole year
 ------------------------------------------
 
@@ -133,7 +170,7 @@ incident_dat_2017 %>%
   ggplot(aes(x = date, y = n)) + geom_line() + labs(y = 'Frequency')
 ```
 
-![](incident_EDA_files/figure-markdown_github/unnamed-chunk-4-1.png)
+![](incident_EDA_files/figure-markdown_github/unnamed-chunk-11-1.png)
 
 Look at monthly trend in EMS rescue incident
 --------------------------------------------
@@ -146,7 +183,7 @@ incident_dat_2017 %>%
   scale_x_continuous(breaks = 1:12, labels = month.name)
 ```
 
-![](incident_EDA_files/figure-markdown_github/unnamed-chunk-5-1.png)
+![](incident_EDA_files/figure-markdown_github/unnamed-chunk-12-1.png)
 
 Look at hourly trend
 --------------------
@@ -158,7 +195,7 @@ incident_dat_2017 %>%
   ggplot(aes(x = hour, y = n)) + geom_line() + labs(y = 'Frequency')
 ```
 
-![](incident_EDA_files/figure-markdown_github/unnamed-chunk-6-1.png)
+![](incident_EDA_files/figure-markdown_github/unnamed-chunk-13-1.png)
 
 And look at lag time (average) by the hour
 ==========================================
@@ -173,230 +210,95 @@ incident_dat_2017 %>%
 
     ## Don't know how to automatically pick scale for object of type difftime. Defaulting to continuous.
 
-![](incident_EDA_files/figure-markdown_github/unnamed-chunk-7-1.png)
-
-Response time by area(zip\_code)
---------------------------------
+![](incident_EDA_files/figure-markdown_github/unnamed-chunk-14-1.png)
 
 ``` r
 incident_dat_2017 %>%
-  group_by(zip_code) %>%
-  summarise(mean_response_time = mean(response_time, na.rm = TRUE)) %>% 
-  mutate(zip_code = forcats::fct_reorder(zip_code, mean_response_time, 
-                                         .asc = TRUE)) %>% 
-  ggplot(aes(x = zip_code, y = mean_response_time)) + 
-  geom_point(size = .5, color = "darkred") +  
-  coord_flip() +
-  theme_bw()
+    group_by(hour) %>% 
+  ggplot(aes(x = hour, y = response_time)) + 
+  geom_smooth(se = FALSE) 
 ```
 
     ## Don't know how to automatically pick scale for object of type difftime. Defaulting to continuous.
 
-![](incident_EDA_files/figure-markdown_github/unnamed-chunk-8-1.png)
-
-&lt;&lt;&lt;&lt;&lt;&lt;&lt; HEAD
-
-======= \#\# Extract ZIP Code Definitions of New York City Neighborhoods
-
-``` r
-url = "https://www.health.ny.gov/statistics/cancer/registry/appendix/neighborhoods.htm?fbclid=IwAR3N4VlKC1OehRZyEuDYPEAE7AFAEXXIRC11seIBKxA-0fd3g4hL0QvnV20"
-xml = read_html(url)
-
-zip_code_table = 
-  (xml %>% html_nodes(css = "table")) %>% 
-  .[[1]] %>%
-  html_table() %>% 
-  janitor::clean_names() %>%  
-  select(neighborhood, zip_codes) %>% 
-  separate(zip_codes, c("a", "b", "c", "d", "e", "f", "g", "h", "i"), 
-           sep = ",") %>% 
-  gather(key = to_remove, value = zip_code, a:i) %>% 
-  select(-to_remove) %>% 
-  na.omit() %>% 
-  distinct() %>% 
-  mutate(zip_code = as.numeric(zip_code))
-```
-
-    ## Warning: Expected 9 pieces. Missing pieces filled with `NA` in 41 rows [1,
-    ## 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, ...].
-
-Add neighborhood variable
--------------------------
-
-``` r
-# To match zip_code to neighborhood table, converted it to numeric
-incident_dat_2017 = 
-  incident_dat_2017 %>% 
-    mutate(zip_code = as.numeric(zip_code)) 
-
-incident_dat_2017 =  
-  left_join(incident_dat_2017, zip_code_table, by = "zip_code") 
-```
-
-Response time by area(neighborhood)
------------------------------------
-
-``` r
-incident_dat_2017 %>%
-  na.omit(neighborhood) %>% 
-  group_by(neighborhood) %>%
-  summarise(mean_response_time = mean(response_time, na.rm = TRUE)) %>% 
-  mutate(neighborhood = forcats::fct_reorder(neighborhood, mean_response_time, 
-                                         .asc = TRUE)) %>% 
-  ggplot(aes(x = neighborhood, y = mean_response_time)) + 
-  geom_point(size = 1, color = "darkred") +  
-  coord_flip() +
-  theme_bw()
-```
-
-    ## Don't know how to automatically pick scale for object of type difftime. Defaulting to continuous.
-
-![](incident_EDA_files/figure-markdown_github/unnamed-chunk-11-1.png)
-
-Importing the weather data
---------------------------
-
-``` r
-library(rnoaa)
-
-nyc_weather_2017 = 
-  rnoaa::meteo_pull_monitors("USW00094728", 
-                             var = c("PRCP", "TMIN", "TMAX", "SNOW", "SNWD"), 
-                             date_min = "2017-01-01", 
-                             date_max = "2017-12-31"
-                             ) %>% 
-  mutate(tmin = tmin/10, tmax = tmax/10, prcp = prcp/10) %>% 
-  select(-id)
-```
-
-Combined data with weather data
--------------------------------
-
-``` r
-incident_dat_2017 = 
-  left_join(incident_dat_2017, nyc_weather_2017, by = "date")
-```
-
-EDA -- mean response time and mean variables from weather data
---------------------------------------------------------------
-
-``` r
-summary_mean = 
-incident_dat_2017 %>% 
-  group_by(date) %>% 
-  summarise(mean_response_time = mean(response_time, na.rm = TRUE),
-            mean_prcp = mean(prcp, na.rm = TRUE),
-            mean_snow = mean(snow, na.rm = TRUE),
-            mean_snwd = mean(snwd, na.rm = TRUE),
-            mean_tmax = mean(tmax, na.rm = TRUE),
-            mean_tmin = mean(tmin, na.rm = TRUE))
-```
-
-``` r
-summary_mean %>% 
-  filter(mean_prcp > 0) %>% 
-  ggplot(aes(x = mean_prcp, y = mean_response_time)) +
-  geom_point() + 
-  geom_smooth()
-```
-
-    ## Don't know how to automatically pick scale for object of type difftime. Defaulting to continuous.
-
-    ## `geom_smooth()` using method = 'loess' and formula 'y ~ x'
+    ## `geom_smooth()` using method = 'gam' and formula 'y ~ s(x, bs = "cs")'
 
 ![](incident_EDA_files/figure-markdown_github/unnamed-chunk-15-1.png)
 
+Hour of the day vs frequency, mean response time
+------------------------------------------------
+
 ``` r
-summary_mean %>%  
-  ggplot(aes(x = mean_snow, y = mean_response_time)) +
-  geom_point() + 
-  geom_smooth()
+library(grid)
+
+hourly_freq = 
+  incident_dat_2017 %>% 
+  group_by(hour) %>% 
+  count() %>% 
+  ggplot(aes(x = hour, y = n)) + 
+  geom_line() +
+  labs(x = "Hour of the day", y = "Frequency") +
+  theme_bw()
+
+hourly_time = 
+  incident_dat_2017 %>%
+    group_by(hour) %>% 
+  ggplot(aes(x = hour, y = response_time)) + 
+  geom_smooth(se = FALSE) +
+  labs(x = "Hour of the day", y = "Mean response time") +
+  theme_bw()
+
+grid.newpage()
+grid.draw(rbind(ggplotGrob(hourly_freq), ggplotGrob(hourly_time), size = "last"))
 ```
 
     ## Don't know how to automatically pick scale for object of type difftime. Defaulting to continuous.
 
-    ## `geom_smooth()` using method = 'loess' and formula 'y ~ x'
-
-    ## Warning in simpleLoess(y, x, w, span, degree = degree, parametric =
-    ## parametric, : at -1.195
-
-    ## Warning in simpleLoess(y, x, w, span, degree = degree, parametric =
-    ## parametric, : radius 1.428
-
-    ## Warning in simpleLoess(y, x, w, span, degree = degree, parametric =
-    ## parametric, : all data on boundary of neighborhood. make span bigger
-
-    ## Warning in simpleLoess(y, x, w, span, degree = degree, parametric =
-    ## parametric, : pseudoinverse used at -1.195
-
-    ## Warning in simpleLoess(y, x, w, span, degree = degree, parametric =
-    ## parametric, : neighborhood radius 1.195
-
-    ## Warning in simpleLoess(y, x, w, span, degree = degree, parametric =
-    ## parametric, : reciprocal condition number 1
-
-    ## Warning in simpleLoess(y, x, w, span, degree = degree, parametric =
-    ## parametric, : zero-width neighborhood. make span bigger
-
-    ## Warning: Computation failed in `stat_smooth()`:
-    ## NA/NaN/Inf in foreign function call (arg 5)
+    ## `geom_smooth()` using method = 'gam' and formula 'y ~ s(x, bs = "cs")'
 
 ![](incident_EDA_files/figure-markdown_github/unnamed-chunk-16-1.png)
 
+Month vs frequency, mean response time
+--------------------------------------
+
 ``` r
-summary_mean %>% 
-  filter(mean_snwd > 0) %>%
-  ggplot(aes(x = mean_snwd, y = mean_response_time)) +
-  geom_point() + 
-  geom_smooth()
+# month_freq =
+#   incident_dat_2017 %>% 
+#   group_by(incident_month) %>% count() %>% 
+#   ggplot(aes(x = incident_month, y = n)) + geom_line() + 
+#   theme(axis.text.x = element_text(angle = 45)) +  labs(y = 'Frequency') +
+#   scale_x_continuous(breaks = 1:12, labels = month.name) +
+#   theme_bw()
+# 
+# month_time = 
+#   incident_dat_2017 %>%
+#   group_by(incident_month) %>% 
+#   ggplot(aes(x = incident_month, y = response_time)) + 
+#   geom_smooth(se = FALSE) +
+#   labs(x = "Month", y = "Mean response time") +
+#   scale_x_continuous(breaks = 1:12, labels = month.name) +
+#   theme_bw() +
+#   theme(axis.text.x = element_text(angle = 45)) 
+# 
+# grid.newpage()
+# grid.draw(rbind(ggplotGrob(month_freq), ggplotGrob(month_time), size = "last"))
 ```
 
-    ## Don't know how to automatically pick scale for object of type difftime. Defaulting to continuous.
-
-    ## `geom_smooth()` using method = 'loess' and formula 'y ~ x'
-
-![](incident_EDA_files/figure-markdown_github/unnamed-chunk-17-1.png)
+### rainy day vs snowy day
 
 ``` r
-summary_mean %>% 
-  ggplot(aes(x = mean_tmax, y = mean_response_time)) +
-  geom_point() + 
-  geom_smooth()
-```
-
-    ## Don't know how to automatically pick scale for object of type difftime. Defaulting to continuous.
-
-    ## `geom_smooth()` using method = 'loess' and formula 'y ~ x'
-
-![](incident_EDA_files/figure-markdown_github/unnamed-chunk-18-1.png)
-
-``` r
-summary_mean %>% 
-  ggplot(aes(x = mean_tmin, y = mean_response_time)) +
-  geom_point() + 
-  geom_smooth()
-```
-
-    ## Don't know how to automatically pick scale for object of type difftime. Defaulting to continuous.
-
-    ## `geom_smooth()` using method = 'loess' and formula 'y ~ x'
-
-![](incident_EDA_files/figure-markdown_github/unnamed-chunk-19-1.png)
-
-EDA -- yes or no
-----------------
-
-``` r
-resp_time_prcp = 
-summary_mean %>% 
-  mutate(prcp = mean_prcp > 0) %>% 
-  ggplot(aes(x = prcp, y = mean_response_time)) +
+resp_time_prcp =
+  incident_weather %>% 
+  mutate(prcp = prcp > 0) %>%
+  group_by(date, prcp) %>% 
+  summarise(mean_resp_time = mean(response_time)) %>% 
+  ggplot(aes(x = prcp, y = mean_resp_time)) +
   geom_violin(aes(fill = factor(prcp)), alpha = .5) +
   stat_summary(fun.y = mean, geom = "point", size = 4, color = "blue") +
   labs(
-    title = "Mean response time in rainy conditions",
+    title = "Mean Response time in rainy conditions",
     x = "Precipitation",
-    y = "Mean response time"
+    y = "Response time"
   ) +
   viridis::scale_fill_viridis(
     name = "Precipitation",
@@ -406,15 +308,18 @@ summary_mean %>%
         strip.text = element_text(color = "white", face = "bold"),
         legend.position = "None") 
 
-resp_time_snow = 
-summary_mean %>% 
-  mutate(snow = mean_snow > 0) %>% 
-  ggplot(aes(x = snow, y = mean_response_time)) +
+resp_time_snow =
+  incident_weather %>% 
+  mutate(snow = snow > 0) %>%
+  group_by(date, snow) %>% 
+  summarise(mean_resp_time = mean(response_time)) %>% 
+  ggplot(aes(x = snow, y = mean_resp_time)) +
   geom_violin(aes(fill = factor(snow)), alpha = .5) +
   stat_summary(fun.y = mean, geom = "point", size = 4, color = "blue") +
   labs(
     title = "Mean response time in snowy conditions",
-    y = "Mean response time"
+    y = "Mean response time",
+    x = "Snow"
   ) +
   viridis::scale_fill_viridis(
     name = "Snow",
@@ -430,6 +335,4 @@ resp_time_prcp + resp_time_snow
     ## Don't know how to automatically pick scale for object of type difftime. Defaulting to continuous.
     ## Don't know how to automatically pick scale for object of type difftime. Defaulting to continuous.
 
-![](incident_EDA_files/figure-markdown_github/unnamed-chunk-20-1.png)
-
-Mean response time seems related to snow but not precipitation.
+![](incident_EDA_files/figure-markdown_github/unnamed-chunk-18-1.png)
