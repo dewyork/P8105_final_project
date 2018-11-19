@@ -4,7 +4,7 @@ author: "Youn Kyeong Chang (uni# yc3242)"
 date: "November 12, 2018"
 output: html_document
 ---
-```{r}
+```{r include = FALSE}
 library(tidyverse)
 library(lubridate)
 library(xml2)
@@ -12,8 +12,10 @@ library(rvest)
 library(patchwork)
 ```
 
+##### Data sets ######
+
 ## Response time data - Loaded and tidied data
-```{r}
+```{r include = FALSE}
 incident_dat_2017 <-  
   read_csv('data/Incidents_Responded_to_by_Fire_Companies.csv',
   col_types = "cicccicciccccccccccciccccccc") %>% 
@@ -30,8 +32,7 @@ incident_dat_2017 <-
 
   # Added response time(minute) variable
   # mutate(response_time = arrival_date_time - incident_date_time) %>%
-  mutate(response_time = difftime(arrival_date_time, incident_date_time, 
-                                  units = 'secs'),
+  mutate(response_time = difftime(arrival_date_time, incident_date_time, units = 'mins'),
   # Added hour variable
   hour = hour(incident_date_time),
   date = date(incident_date_time),
@@ -40,14 +41,14 @@ incident_dat_2017 <-
   separate(incident_date, 
            into = c("incident_year", "incident_month", "incident_day"), 
            sep = "-") %>% 
-  select(-incident_year, -street_highway, -borough_desc) %>% 
+  select(-incident_year) %>% 
   mutate(incident_month = as.numeric(incident_month),
          incident_day = as.numeric(incident_day))
 ```
 
 
-## Extract ZIP Code Definitions of New York City Neighborhoods
-```{r fig.height = 8}
+## Added neighborhood variable
+```{r fig.height = 8, include = FALSE}
 url = "https://www.health.ny.gov/statistics/cancer/registry/appendix/neighborhoods.htm?fbclid=IwAR3N4VlKC1OehRZyEuDYPEAE7AFAEXXIRC11seIBKxA-0fd3g4hL0QvnV20"
 
 xml = read_html(url)
@@ -64,10 +65,7 @@ zip_code_table = (xml %>% html_nodes(css = "table")) %>%
   na.omit() %>% 
   distinct() %>% 
   mutate(zip_code = as.numeric(zip_code))
-```
 
-## Add neighborhood variable
-```{r}
 # To match zip_code to neighborhood table, converted it to numeric
 incident_dat_2017 = 
   incident_dat_2017 %>% 
@@ -77,22 +75,95 @@ incident_dat_2017 =
   left_join(incident_dat_2017, zip_code_table, by = "zip_code") 
 ```
 
-## Response time by area(zip_code)
-```{r fig.height = 8}
-incident_dat_2017 %>%  
-  group_by(zip_code) %>%
-  summarise(mean_response_time = mean(response_time, na.rm = TRUE)) %>% 
-  mutate(zip_code = forcats::fct_reorder(zip_code, mean_response_time, 
-                                         .asc = TRUE)) %>% 
-  ggplot(aes(x = zip_code, y = mean_response_time)) + 
-  geom_point(size = .5, color = "darkred") +  
-  coord_flip() +
-  theme_bw()
+## Add weather-related variable
+```{r include = FALSE}
+library(rnoaa)
+
+nyc_weather_2017 = 
+  rnoaa::meteo_pull_monitors("USW00094728", 
+                             var = c("PRCP", "TMIN", "TMAX", "SNOW", "SNWD"), 
+                             date_min = "2017-01-01", 
+                             date_max = "2017-12-31"
+                             ) %>% 
+  mutate(tmin = tmin/10, tmax = tmax/10, prcp = prcp/10) %>% 
+  select(-id)
+
+incident_weather = 
+  left_join(incident_dat_2017, nyc_weather_2017, by = "date")
+```
+
+## Added prcp category variable
+
+```{r include = FALSE}
+nyc_weather_2017 = 
+  nyc_weather_2017 %>%
+  mutate(prcp_ctg = 
+           ifelse(prcp == 0, "NA",
+           ifelse((prcp > 0 & prcp <= 25), "low",
+           ifelse((prcp > 25 & prcp <= 60), "medium", "high"))))
+
+incident_prcp_ctg = 
+  inner_join(incident_dat_2017, nyc_weather_2017, by = "date")
+
+incident_prcp_ctg %>%
+  group_by(date) %>% 
+  filter(prcp > 0, 
+         neighborhood == "Kingsbridge and Riverdale") %>%
+  ggplot(aes(x = prcp_ctg, y = response_time)) +
+  geom_violin(aes(fill = factor(prcp_ctg)), alpha = .5) +
+  stat_summary(fun.y = mean, geom = "point", size = 4, color = "blue")
+```
+
+## Added season variable
+```{r}
+incident_season = 
+  incident_dat_2017 %>%
+  mutate(season = 
+           ifelse(incident_month %in% 9:11, "Fall",
+           ifelse(incident_month %in% c(12,1,2), "Winter",
+           ifelse(incident_month %in% 3:5, "Spring", "Summer"))))
+```
+
+##Added incident response time category variable 
+```{r}
+incident_by_date = 
+  incident_dat_2017 %>% 
+  group_by(zip_code, date) %>% 
+  summarize(n_incident = n())  
+  
+incident_by_zipcode = 
+  incident_dat_2017 %>% 
+  group_by(zip_code, date) %>% 
+  summarize(n_incident = n()) %>% 
+  ungroup() %>% 
+  group_by(zip_code) %>% 
+  summarize(mean_incident = mean(n_incident),
+            sd_incident = sd(n_incident),
+            std_high_incident = mean_incident + sd_incident,
+            std_low_incident = mean_incident - sd_incident)
+
+incident_response_time =
+  incident_dat_2017 %>% 
+  group_by(zip_code) %>% 
+  select(zip_code, response_time, date) 
+
+incident_category_data = 
+  left_join(incident_by_date, incident_by_zipcode, by = "zip_code") %>% 
+  mutate(incident_category = 
+           ifelse(((n_incident - std_high_incident) > 0), "high", 
+           ifelse(((std_low_incident - n_incident) > 0), "low", "medium"))) %>% 
+  select(zip_code, date, incident_category)
+
+incid_cate_joined_data = 
+  inner_join(incident_dat_2017, incident_category_data) %>% 
+  na.omit() 
 ```
 
 
+
+###### EDA ######
 ## Response time by area(neighborhood)
-```{r fig.height = 8}
+```{r fig.height = 8, include = FALSE}
 incident_dat_2017 %>%
   na.omit(neighborhood) %>% 
   group_by(neighborhood) %>%
@@ -106,26 +177,6 @@ incident_dat_2017 %>%
 ```
 
 
-## Importing the weather data
-```{r}
-library(rnoaa)
-
-nyc_weather_2017 = 
-  rnoaa::meteo_pull_monitors("USW00094728", 
-                             var = c("PRCP", "TMIN", "TMAX", "SNOW", "SNWD"), 
-                             date_min = "2017-01-01", 
-                             date_max = "2017-12-31"
-                             ) %>% 
-  mutate(tmin = tmin/10, tmax = tmax/10, prcp = prcp/10) %>% 
-  select(-id)
-```
-
-
-## Combined data with weather data
-```{r}
-incident_dat_2017 = 
-  left_join(incident_dat_2017, nyc_weather_2017, by = "date")
-```
 
 ## EDA -- mean response time and mean variables from weather data
 ```{r}
@@ -140,55 +191,8 @@ incident_dat_2017 %>%
             mean_tmin = mean(tmin, na.rm = TRUE))
 ```
 
-## Prcp category
-```{r}
-nyc_weather_2017 = 
-  nyc_weather_2017 %>%
-  mutate(prcp_ctg = 
-           ifelse(prcp == 0, "NA",
-           ifelse((prcp > 0 & prcp <= 25), "low",
-           ifelse((prcp > 25 & prcp <= 60), "medium", "high"))))
 
-incident_dat_2017 = 
-  inner_join(incident_dat_2017, nyc_weather_2017, by = "date")
 
-incident_dat_2017 %>%
-  group_by(date) %>% 
-  filter(prcp > 0, 
-         neighborhood == "Kingsbridge and Riverdale") %>%
-  ggplot(aes(x = prcp_ctg, y = response_time)) +
-  geom_violin(aes(fill = factor(prcp_ctg)), alpha = .5) +
-  stat_summary(fun.y = mean, geom = "point", size = 4, color = "blue")
-```
-
-## By season
-```{r}
-incident_dat_2017 = 
-  incident_dat_2017 %>%
-  mutate(season = 
-           ifelse(incident_month %in% 9:11, "Fall",
-           ifelse(incident_month %in% c(12,1,2), "Winter",
-           ifelse(incident_month %in% 3:5, "Spring", "Summer"))))
-
-# incident_dat_2017 %>%
-#   group_by(zip_code, season) %>% 
-#   summarise(mean_response_time = mean(response_time)) %>% 
-#   ggplot(aes(x = season, y = mean_response_time)) +
-#   geom_violin(aes(fill = factor(season)), alpha = .5) +
-#   stat_summary(fun.y = mean, geom = "point", size = 4, color = "blue")
-# 
-# incident_dat_2017 %>%
-#   group_by(season) %>% 
-#   summarise(mean_response_time = mean(response_time)) %>% 
-#   ggplot(aes(x = season, y = mean_response_time)) +
-#   geom_point()
-
-# incident_dat_2017 %>%
-#   group_by(season) %>% 
-#   ggplot(aes(x = season, y = response_time)) +
-#   geom_violin(aes(fill = factor(season)), alpha = .5) +
-#   stat_summary(fun.y = mean, geom = "point", size = 4, color = "blue")
-```
 
 ## EDA -- yes or no ######
 ```{r}
@@ -253,37 +257,7 @@ incident_dat_2017 %>%
 
 ## Number of incidence category
 ```{r}
-incident_by_date = 
-  incident_dat_2017 %>% 
-  group_by(zip_code, date) %>% 
-  summarize(n_incident = n())  
-  
-incident_by_zipcode = 
-  incident_dat_2017 %>% 
-  group_by(zip_code, date) %>% 
-  summarize(n_incident = n()) %>% 
-  ungroup() %>% 
-  group_by(zip_code) %>% 
-  summarize(mean_incident = mean(n_incident),
-            sd_incident = sd(n_incident),
-            std_high_incident = mean_incident + sd_incident,
-            std_low_incident = mean_incident - sd_incident)
 
-incident_response_time =
-  incident_dat_2017 %>% 
-  group_by(zip_code) %>% 
-  select(zip_code, response_time, date) 
-
-incident_category_data = 
-  left_join(incident_by_date, incident_by_zipcode, by = "zip_code") %>% 
-  mutate(incident_category = 
-           ifelse(((n_incident - std_high_incident) > 0), "high", 
-           ifelse(((std_low_incident - n_incident) > 0), "low", "medium"))) %>% 
-  select(zip_code, date, incident_category)
-
-incid_cate_joined_data = 
-  inner_join(incident_dat_2017, incident_category_data) %>% 
-  na.omit() 
 
 # filtered by zip code representative
 incid_cate_joined_data %>% 
@@ -445,5 +419,25 @@ incident_dat_2017 =
            ifelse(hour %in% 6:12, "morning",
            ifelse(hour %in% 13:17, "afternoon",
            ifelse(hour %in% 18:23, "night","dawn"))))
+
+incident_dat_2017 %>% 
+  group_by(hour_of_day) %>%
+  summarise(mean_resp_time = mean(response_time)) %>% 
+  ggplot(aes(x = hour_of_day, y = mean_resp_time)) +
+  geom_point()
+
+incident_dat_2017 %>% 
+  group_by(hour_of_day, neighborhood) %>%
+  summarise(mean_resp_time = mean(response_time)) %>% 
+  ggplot(aes(x = hour_of_day, y = mean_resp_time)) +
+  geom_violin(aes(fill = factor(hour_of_day)), alpha = .5) +
+  stat_summary(fun.y = mean, geom = "point", size = 4, color = "blue")
+
+temp = 
+incident_dat_2017 %>% 
+  group_by(hour_of_day, neighborhood) %>%
+  ggplot(aes(x = hour_of_day, y = response_time)) +
+  geom_violin(aes(fill = factor(hour_of_day)), alpha = .5) +
+  stat_summary(fun.y = mean, geom = "point", size = 4, color = "blue")
 ```
 
