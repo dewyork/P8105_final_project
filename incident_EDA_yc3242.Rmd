@@ -160,35 +160,27 @@ incident_dat_2017 %>%
   geom_violin(aes(fill = factor(prcp_ctg)), alpha = .5) +
   stat_summary(fun.y = mean, geom = "point", size = 4, color = "blue")
 ```
-#
-# ```{r}
-# summary_mean %>%
-#   ggplot(aes(x = mean_snow, y = mean_response_time)) +
-#   geom_point() +
-#   geom_smooth()
-# ```
-#
-# ```{r}
-# summary_mean %>%
-#   filter(mean_snwd > 0) %>%
-#   ggplot(aes(x = mean_snwd, y = mean_response_time)) +
-#   geom_point() +
-#   geom_smooth()
-# ```
-#
-# ```{r}
-# summary_mean %>%
-#   ggplot(aes(x = mean_tmax, y = mean_response_time)) +
-#   geom_point() +
-#   geom_smooth()
-# ```
-#
-# ```{r}
-# summary_mean %>%
-#   ggplot(aes(x = mean_tmin, y = mean_response_time)) +
-#   geom_point() +
-#   geom_smooth()
-# ```
+
+## By season
+```{r}
+incident_dat_2017 = 
+  incident_dat_2017 %>%
+  mutate(season = 
+           ifelse(incident_month %in% 9:11, "Fall",
+           ifelse(incident_month %in% c(12,1,2), "Winter",
+           ifelse(incident_month %in% 3:5, "Spring", "Summer"))))
+
+incident_dat_2017 = 
+  inner_join(incident_dat_2017, nyc_weather_2017, by = "date")
+
+incident_dat_2017 %>%
+  group_by(date) %>% 
+  filter(prcp > 0, 
+         neighborhood == "Kingsbridge and Riverdale") %>%
+  ggplot(aes(x = prcp_ctg, y = response_time)) +
+  geom_violin(aes(fill = factor(prcp_ctg)), alpha = .5) +
+  stat_summary(fun.y = mean, geom = "point", size = 4, color = "blue")
+```
 
 ## EDA -- yes or no ######
 ```{r}
