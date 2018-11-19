@@ -400,3 +400,25 @@ street_closure_2017 <-
 
 
 ## Mean response time category
+```{r}
+high_resp_area =
+  incident_dat_2017 %>% 
+  filter(neighborhood %in% c("Kingsbridge andd Riverdale", "Gramercy Park and Murray Hill", "Chelsea and Clinton")) %>% 
+  mutate(resp_area = "high")
+
+low_resp_area =
+  incident_dat_2017 %>% 
+  filter(neighborhood %in% c("Bushwick and Williamsburg", "Port Richmond", "Central Brooklyn")) %>% 
+   mutate(resp_area = "low")
+
+resp_area_bind = 
+  bind_rows(high_resp_area, low_resp_area)
+
+resp_area_bind %>%  
+  group_by(incident_month, resp_area) %>% 
+  summarise(mean_resp_time = mean(response_time)) %>% 
+  ggplot(aes(x = incident_month, y = mean_resp_time)) +
+  geom_point() +
+  facet_grid(~resp_area)
+```
+
