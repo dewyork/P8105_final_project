@@ -257,8 +257,6 @@ incident_dat_2017 %>%
 
 ## Number of incidence category
 ```{r}
-
-
 # filtered by zip code representative
 incid_cate_joined_data %>% 
   filter(zip_code == 10001) %>%  

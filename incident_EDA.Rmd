@@ -170,6 +170,13 @@ incident_hour_of_day =
            ifelse(hour %in% 18:23, "night","dawn"))))
 ```
 
+## response_time over 5min 
+```{r}
+incident_5min = 
+incident_dat_2017 %>% 
+  mutate(over_5min = ifelse(response_time > 5, "5min+", "5min-"))
+```
+
 ## Street closure data 
 ```{r}
 street_closure_2017 <-  
@@ -341,6 +348,36 @@ resp_time_snow =
 resp_time_prcp + resp_time_snow
 ```
 
+## Tabulized 5min- 5min+ snow
+```{r}
+incident_weather %>% 
+  na.omit() %>% 
+  mutate(prcp = prcp > 0,
+         snow = snow > 0,
+         over_5min = ifelse(response_time > 5, "5min+", "5min-")) %>%
+  group_by(over_5min) %>%
+  summarize(prcp_prop = mean(prcp),
+            snow_prop = mean(snow)) %>% 
+  knitr::kable(digits = 3)
+```
+
+## Tabulized 5min- 5min+ snow in winter
+```{r}
+incident_weather %>% 
+  mutate(prcp = prcp > 0,
+         snow = snow > 0,
+         over_5min = ifelse(response_time > 5, "5min+", "5min-"),
+         season = 
+           ifelse(incident_month %in% 9:11, "Fall",
+           ifelse(incident_month %in% c(12,1,2), "Winter",
+           ifelse(incident_month %in% 3:5, "Spring", "Summer")))) %>% 
+  filter(season == "Winter") %>% 
+  group_by(over_5min) %>%
+  summarize(snow_prop = mean(snow)) %>% 
+  knitr::kable(digits = 3)
+```
+
+
 
 ## neighborhood
 ```{r}
@@ -376,5 +413,18 @@ neighborhood_time =
 grid.newpage()
 grid.draw(rbind(ggplotGrob(neighborhood_freq), ggplotGrob(neighborhood_time), size = "last"))
 ```
+
+## Hour of the day frequency facet 5 min
+```{r}
+  # incident_5min %>% 
+  # group_by(hour, over_5min) %>% 
+  # count() %>% 
+  # ggplot(aes(x = hour, y = n)) + 
+  # geom_line() +
+  # labs(x = "Hour of the day", y = "Frequency") +
+  # theme_bw() +
+  # facet_grid(~ over_5min)
+```
+
 
 

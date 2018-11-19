@@ -1,0 +1,7 @@
+---
+title: "introduction"
+author: "Youn Kyeong Chang (uni# yc3242)"
+date: "November 19, 2018"
+output: html_document
+---
+
