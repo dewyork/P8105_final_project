@@ -243,7 +243,7 @@ incident_dat_2017 %>%
   geom_smooth(se = FALSE) 
 ```
 
-
+## Hour of the day vs frequency, mean response time
 ```{r}
 library(grid)
 
@@ -266,6 +266,31 @@ hourly_time =
 
 grid.newpage()
 grid.draw(rbind(ggplotGrob(hourly_freq), ggplotGrob(hourly_time), size = "last"))
+```
+
+
+## Month vs frequency, mean response time
+```{r}
+# month_freq =
+#   incident_dat_2017 %>% 
+#   group_by(incident_month) %>% count() %>% 
+#   ggplot(aes(x = incident_month, y = n)) + geom_line() + 
+#   theme(axis.text.x = element_text(angle = 45)) +  labs(y = 'Frequency') +
+#   scale_x_continuous(breaks = 1:12, labels = month.name) +
+#   theme_bw()
+# 
+# month_time = 
+#   incident_dat_2017 %>%
+#   group_by(incident_month) %>% 
+#   ggplot(aes(x = incident_month, y = response_time)) + 
+#   geom_smooth(se = FALSE) +
+#   labs(x = "Month", y = "Mean response time") +
+#   scale_x_continuous(breaks = 1:12, labels = month.name) +
+#   theme_bw() +
+#   theme(axis.text.x = element_text(angle = 45)) 
+# 
+# grid.newpage()
+# grid.draw(rbind(ggplotGrob(month_freq), ggplotGrob(month_time), size = "last"))
 ```
 
 
@@ -315,3 +340,4 @@ resp_time_snow =
 
 resp_time_prcp + resp_time_snow
 ```
+
