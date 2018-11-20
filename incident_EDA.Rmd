@@ -8,9 +8,12 @@ output: github_document
 ```{r}
 library(tidyverse)
 library(lubridate)
+library(xml2)
+library(rvest)
+library(patchwork)
 ```
 
-## Loaded and tidied data
+## Response time data - Loaded and tidied data
 ```{r}
 incident_dat_2017 <-  
   read_csv('data/Incidents_Responded_to_by_Fire_Companies.csv',
@@ -42,11 +45,28 @@ incident_dat_2017 <-
          incident_day = as.numeric(incident_day))
 ```
 
+## Street closure data - Loaded and tidied data
+```{r}
+street_closure_2017 <-  
+  read_csv('data/Street_Closures_due_to_construction_activities_by_Intersection.csv') %>% 
+  janitor::clean_names() %>% 
+  #recode date/time
+  mutate(work_start_date = mdy_hms(work_start_date),
+         work_end_date = mdy_hms(work_end_date),
+         work_time = round(difftime(work_end_date, work_start_date, 
+                                    units = 'days'), 0)) %>% 
+  #select year 2017
+  filter(year(work_start_date) == 2017) %>% 
+  select(-purpose) %>% 
+  na.omit() 
+```
+
 ## create frequency by day for the whole year
 ```{r}
-incident_dat_2017 %>% mutate(date = date(incident_date_time)) %>%
+incident_dat_2017 %>% 
+  mutate(date = date(incident_date_time)) %>%
   group_by(date) %>% count() %>%
-ggplot(aes(x = date, y = n)) + geom_line() + labs(y = 'Frequency')
+  ggplot(aes(x = date, y = n)) + geom_line() + labs(y = 'Frequency')
 ```
 
 ## Look at monthly trend in EMS rescue incident
@@ -56,7 +76,6 @@ incident_dat_2017 %>%
   ggplot(aes(x = incident_month, y = n)) + geom_line() + 
   theme(axis.text.x = element_text(angle = 45)) +  labs(y = 'Frequency') +
   scale_x_continuous(breaks = 1:12, labels = month.name)
-
 ```
 
 ## Look at hourly trend
@@ -75,6 +94,58 @@ incident_dat_2017 %>%
     summarise(mean_response_time = mean(response_time, na.rm = TRUE)) %>% 
   ggplot(aes(x = hour, y = mean_response_time)) + geom_line() + 
   labs(y = 'Mean response time (minutes)')
+```
+
+
+
+
+<<<<<<< HEAD
+ 
+=======
+## Extract ZIP Code Definitions of New York City Neighborhoods
+```{r fig.height = 8}
+url = "https://www.health.ny.gov/statistics/cancer/registry/appendix/neighborhoods.htm?fbclid=IwAR3N4VlKC1OehRZyEuDYPEAE7AFAEXXIRC11seIBKxA-0fd3g4hL0QvnV20"
+xml = read_html(url)
+
+zip_code_table = 
+  (xml %>% html_nodes(css = "table")) %>% 
+  .[[1]] %>%
+  html_table() %>% 
+  janitor::clean_names() %>%  
+  select(neighborhood, zip_codes) %>% 
+  separate(zip_codes, c("a", "b", "c", "d", "e", "f", "g", "h", "i"), 
+           sep = ",") %>% 
+  gather(key = to_remove, value = zip_code, a:i) %>% 
+  select(-to_remove) %>% 
+  na.omit() %>% 
+  distinct() %>% 
+  mutate(zip_code = as.numeric(zip_code))
+```
+
+## Add neighborhood variable
+```{r}
+# To match zip_code to neighborhood table, converted it to numeric
+incident_dat_2017 = 
+  incident_dat_2017 %>% 
+    mutate(zip_code = as.numeric(zip_code)) 
+
+incident_dat_2017 =  
+  left_join(incident_dat_2017, zip_code_table, by = "zip_code") 
+```
+
+
+## Importing the weather data
+```{r}
+library(rnoaa)
+
+nyc_weather_2017 = 
+  rnoaa::meteo_pull_monitors("USW00094728", 
+                             var = c("PRCP", "TMIN", "TMAX", "SNOW", "SNWD"), 
+                             date_min = "2017-01-01", 
+                             date_max = "2017-12-31"
+                             ) %>% 
+  mutate(tmin = tmin/10, tmax = tmax/10, prcp = prcp/10) %>% 
+  select(-id)
 ```
 
 
