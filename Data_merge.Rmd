@@ -1,0 +1,86 @@
+---
+title: "Create final dataset"
+author: "Team"
+date: "November 10, 2018"
+output: github_document
+---
+
+```{r}
+library(tidyverse)
+library(lubridate)
+library(xml2)
+library(rvest)
+library(rnoaa)
+library(patchwork)
+```
+
+# The purpose of this file is to create final datsets based on 'interim dataset' created by the `data_prep.Rmd`
+
+## Incident data
+```{r }
+load("data/incident_dat_2017.RData")
+
+#Create log(response time)
+incident_dat_2017 <- incident_dat_2017 %>% 
+  mutate(log_response_time = log(as.numeric(response_time)),
+         zip_code = as.numeric(zip_code))
+```
+
+
+## Neighborhood variable (by zipcode) dataset
+```{r}
+load("data/zipcode.RData")
+```
+
+## Weather data
+```{r}
+load("data/nyc_weather_2017.RData") 
+nyc_weather_2017 <- nyc_weather_2017 %>% 
+    mutate(prcp_ctg = 
+           ifelse(prcp == 0, "NA",
+           ifelse((prcp > 0 & prcp <= 25), "low",
+           ifelse((prcp > 25 & prcp <= 60), "medium", "high"))))
+```
+
+## Street closure
+```{r}
+load("data/street_closure_2017.RData")
+```
+
+## Merge first three for final dataset
+
+```{r merge}
+# incident_dat_2017 
+finaldat =  
+  left_join(incident_dat_2017, zip_code_table, by = "zip_code") %>% 
+  inner_join(., nyc_weather_2017, by = "date")
+
+```
+
+## Add additional variables and save finaldat in /data
+```{r}
+finaldat = 
+  finaldat %>%
+  mutate(season = 
+           ifelse(incident_month %in% 9:11, "Fall",
+           ifelse(incident_month %in% c(12,1,2), "Winter",
+           ifelse(incident_month %in% 3:5, "Spring", "Summer"))), 
+         hour_of_day = 
+           ifelse(hour %in% 6:12, "morning",
+           ifelse(hour %in% 13:17, "afternoon",
+           ifelse(hour %in% 18:23, "night","dawn"))), 
+         over_5min = ifelse(response_time > 5, "5min+", "5min-"))
+
+save(finaldat, file = "data/finaldat.RData")
+
+```
+
+
+
+
+
+
+
+
+
+
