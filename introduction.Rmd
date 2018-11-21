@@ -4,6 +4,9 @@ author: "Youn Kyeong Chang (uni# yc3242)"
 date: "November 19, 2018"
 output: html_document
 ---
+
+Due to its large population, New York City requires a powerful, quick, well-equipped and effective Emergency Medical Service System.
+
 BMJ. 2001 Jun 9; 322(7299): 1385–1388.
 Effect of reducing ambulance response times on deaths from out of hospital cardiac arrest: cohort study
 
