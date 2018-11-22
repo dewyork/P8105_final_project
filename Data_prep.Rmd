@@ -1,0 +1,119 @@
+---
+title: "Download data"
+author: "Team"
+date: "November 10, 2018"
+output: github_document
+---
+
+```{r}
+library(tidyverse)
+library(lubridate)
+library(xml2)
+library(rvest)
+library(rnoaa)
+library(patchwork)
+```
+
+# The purpose of this file is to download the datasets and create the 'interim' dataset which will be used in the main analysis. Since some datasets are large, the final products after running this code is the `RData` files for further use.
+
+## Incident data (response from Fire company)
+```{r }
+incident_dat_2017 <-  
+  read_csv('data/Incidents_Responded_to_by_Fire_Companies.csv',
+  col_types = "cicccicciccccccccccciccccccc") %>% 
+  janitor::clean_names() %>% 
+  #recode date/time
+  mutate(incident_date_time = mdy_hms(incident_date_time),
+         arrival_date_time = mdy_hms(arrival_date_time)) %>% 
+  #select year 2017
+  filter(year(incident_date_time) == 2017,
+         incident_type_desc == "300 - Rescue, EMS incident, other") %>% 
+  select(im_incident_key, incident_date_time, arrival_date_time,
+         street_highway:borough_desc) %>% 
+  na.omit() %>% 
+
+  # Added response time(minute) variable
+  # mutate(response_time = arrival_date_time - incident_date_time) %>%
+  mutate(response_time = difftime(arrival_date_time, incident_date_time, units = 'mins'),
+  # Added hour variable
+  hour = hour(incident_date_time),
+  date = date(incident_date_time),
+  # Added incident_month and incident_day variables from incident_date_time
+  incident_date = as.Date(incident_date_time)) %>% 
+  separate(incident_date, 
+           into = c("incident_year", "incident_month", "incident_day"), 
+           sep = "-") %>% 
+  select(-incident_year) %>% 
+  mutate(incident_month = as.numeric(incident_month),
+         incident_day = as.numeric(incident_day))
+
+save(incident_dat_2017, file = "data/incident_dat_2017.RData")
+
+```
+
+
+## Neighborhood variable (by zipcode) dataset
+```{r fig.height = 8}
+url = "https://www.health.ny.gov/statistics/cancer/registry/appendix/neighborhoods.htm?fbclid=IwAR3N4VlKC1OehRZyEuDYPEAE7AFAEXXIRC11seIBKxA-0fd3g4hL0QvnV20"
+
+xml = read_html(url)
+
+zip_code_table = (xml %>% html_nodes(css = "table")) %>% 
+  .[[1]] %>%
+  html_table() %>% 
+  janitor::clean_names() %>%  
+  select(neighborhood, zip_codes) %>% 
+  separate(zip_codes, c("a", "b", "c", "d", "e", "f", "g", "h", "i"), 
+           sep = ",") %>% 
+  gather(key = to_remove, value = zip_code, a:i) %>% 
+  select(-to_remove) %>% 
+  na.omit() %>% 
+  distinct() %>% 
+  mutate(zip_code = as.numeric(zip_code))
+
+save(zip_code_table, file = "data/zipcode.RData")
+```
+
+## Add weather-related dataset
+```{r}
+library(rnoaa)
+
+nyc_weather_2017 = 
+  rnoaa::meteo_pull_monitors("USW00094728", 
+                             var = c("PRCP", "TMIN", "TMAX", "SNOW", "SNWD"), 
+                             date_min = "2017-01-01", 
+                             date_max = "2017-12-31"
+                             ) %>% 
+  mutate(tmin = tmin/10, tmax = tmax/10, prcp = prcp/10) %>% 
+  select(-id)
+
+save(nyc_weather_2017, file = "data/nyc_weather_2017.RData")
+```
+
+
+## Street closure data 
+```{r}
+street_closure_2017 <-  
+  read_csv('data/Street_Closures_due_to_construction_activities_by_Intersection.csv') %>% 
+  janitor::clean_names() %>% 
+  #recode date/time
+  mutate(work_start_date = mdy_hms(work_start_date),
+         work_end_date = mdy_hms(work_end_date),
+         work_time = round(difftime(work_end_date, work_start_date, 
+                                    units = 'days'), 0)) %>% 
+  #select year 2017
+  filter(year(work_start_date) == 2017) %>% 
+  select(-purpose) %>% 
+  na.omit() %>% 
+  mutate(A = toupper(str_replace_all(onstreetname, fixed(" "), "")),
+         B = toupper(str_replace_all(fromstreetname, fixed(" "), "")))
+
+save(street_closure_2017, file = "data/street_closure_2017.RData")
+```
+
+
+
+
+
+
+

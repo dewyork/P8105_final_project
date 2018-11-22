@@ -7,14 +7,30 @@ November 10, 2018
 library(tidyverse)
 ```
 
+<<<<<<< HEAD
+<<<<<<< HEAD
+    ## -- Attaching packages ----------------------------------------------------------------------------------------------------- tidyverse 1.2.1 --
+=======
+    ## -- Attaching packages ------------------------------------------- tidyverse 1.2.1 --
+>>>>>>> 92eac248816c62655f25d8dd0f608b498be4c3e0
+=======
     ## -- Attaching packages -------------------------------------------- tidyverse 1.2.1 --
+>>>>>>> 60adc4cc4682b68613755fae91a1fad3c4557116
 
     ## v ggplot2 3.0.0     v purrr   0.2.5
     ## v tibble  1.4.2     v dplyr   0.7.6
     ## v tidyr   0.8.1     v stringr 1.3.1
     ## v readr   1.1.1     v forcats 0.3.0
 
+<<<<<<< HEAD
+<<<<<<< HEAD
+    ## -- Conflicts -------------------------------------------------------------------------------------------------------- tidyverse_conflicts() --
+=======
+    ## -- Conflicts ---------------------------------------------- tidyverse_conflicts() --
+>>>>>>> 92eac248816c62655f25d8dd0f608b498be4c3e0
+=======
     ## -- Conflicts ----------------------------------------------- tidyverse_conflicts() --
+>>>>>>> 60adc4cc4682b68613755fae91a1fad3c4557116
     ## x dplyr::filter() masks stats::filter()
     ## x dplyr::lag()    masks stats::lag()
 
