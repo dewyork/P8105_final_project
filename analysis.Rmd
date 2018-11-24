@@ -11,5 +11,6 @@ library(lubridate)
 library(xml2)
 library(rvest)
 library(patchwork)
+library(ggplot2)
 ```
 
