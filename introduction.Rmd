@@ -4,6 +4,9 @@ author: "Youn Kyeong Chang (uni# yc3242)"
 date: "November 19, 2018"
 output: html_document
 ---
+
+Due to its large population, New York City requires a powerful, quick, well-equipped and effective Emergency Medical Service System. 
+
 BMJ. 2001 Jun 9; 322(7299): 1385–1388.
 Effect of reducing ambulance response times on deaths from out of hospital cardiac arrest: cohort study
 
@@ -16,4 +19,13 @@ first level of health care response for out-of-hospital
 medical emergencies. Historically, one of the first
 interventions that prehospital personnel performed
 was rapid response to a scene and rapid return of
-a patient to hospital by use of lights and siren
+a patient to hospital by use of lights and siren.
+
+
+Neighborhood Poverty and 9-1-1 Ambulance Response Time.
+
+Seim J, Glenn MJ, English J, Sporer K., 2018 Jan 30
+
+PMID: 29381111 DOI: 10.1080/10903127.2017.1416209
+
+This study done in California county early this year challenges the commonly held assumption that ambulances are later to poor neighborhoods. This got us interested in exploring the relationship in emergency response time between a economically well off area - Upper West Side and a relatively poorer area such as Washington Heigths. 
