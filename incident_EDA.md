@@ -7,30 +7,14 @@ November 10, 2018
 library(tidyverse)
 ```
 
-<<<<<<< HEAD
-<<<<<<< HEAD
-    ## -- Attaching packages ----------------------------------------------------------------------------------------------------- tidyverse 1.2.1 --
-=======
-    ## -- Attaching packages ------------------------------------------- tidyverse 1.2.1 --
->>>>>>> 92eac248816c62655f25d8dd0f608b498be4c3e0
-=======
-    ## -- Attaching packages -------------------------------------------- tidyverse 1.2.1 --
->>>>>>> 60adc4cc4682b68613755fae91a1fad3c4557116
+    ## -- Attaching packages ----------------------------------------------------------------------------- tidyverse 1.2.1 --
 
     ## v ggplot2 3.0.0     v purrr   0.2.5
     ## v tibble  1.4.2     v dplyr   0.7.6
     ## v tidyr   0.8.1     v stringr 1.3.1
     ## v readr   1.1.1     v forcats 0.3.0
 
-<<<<<<< HEAD
-<<<<<<< HEAD
-    ## -- Conflicts -------------------------------------------------------------------------------------------------------- tidyverse_conflicts() --
-=======
-    ## -- Conflicts ---------------------------------------------- tidyverse_conflicts() --
->>>>>>> 92eac248816c62655f25d8dd0f608b498be4c3e0
-=======
-    ## -- Conflicts ----------------------------------------------- tidyverse_conflicts() --
->>>>>>> 60adc4cc4682b68613755fae91a1fad3c4557116
+    ## -- Conflicts -------------------------------------------------------------------------------- tidyverse_conflicts() --
     ## x dplyr::filter() masks stats::filter()
     ## x dplyr::lag()    masks stats::lag()
 
@@ -63,12 +47,54 @@ library(rvest)
 
 ``` r
 library(patchwork)
+library(viridis)
+```
+
+    ## Loading required package: viridisLite
+
+``` r
+library(ggmap)
+library(jpeg)
+library(grid)
 ```
 
 ##### Data sets
 
 Response time data - Loaded and tidied data
 -------------------------------------------
+
+adding a graph overlap with response time
+-----------------------------------------
+
+``` r
+#Overlapping plots on map for EDA (abhishek)
+nyc_pic = readJPEG("nyc-boroughs-map.jpg")
+
+zip_coor = read.csv("./data/US Zip Codes from 2013 Government Data")
+
+zip_coor =
+  zip_coor %>% 
+  janitor::clean_names() %>% 
+  rename(zip_code = zip, long = lng)
+  
+incident_zip_coor = merge(incident_dat_2017, zip_coor)
+
+map_overlap = 
+  incident_zip_coor %>%
+  group_by(zip_code) %>% 
+  mutate(response_time = as.numeric(response_time)) %>%
+  mutate(mean_res_time = mean(response_time)) %>% 
+  ggplot(aes(x = long, y = lat, size = mean_res_time, color = mean_res_time)) +
+  annotation_custom(rasterGrob(nyc_pic, 
+                               width = unit(1,"npc"), 
+                               height = unit(1,"npc")), 
+                               -Inf, Inf, -Inf, Inf) +
+  geom_point() +
+  viridis::scale_color_viridis() + theme_set(theme_bw() + theme(legend.position = "bottom"))
+
+
+ggsave("map_overlap.jpg", map_overlap, width = 8, height = 5)
+```
 
 Added neighborhood variable
 ---------------------------
@@ -142,6 +168,15 @@ incident_hour_of_day =
            ifelse(hour %in% 18:23, "night","dawn"))))
 ```
 
+response\_time over 5min
+------------------------
+
+``` r
+incident_5min = 
+incident_dat_2017 %>% 
+  mutate(over_5min = ifelse(response_time > 5, "5min+", "5min-"))
+```
+
 Street closure data
 -------------------
 
@@ -186,7 +221,7 @@ incident_dat_2017 %>%
   ggplot(aes(x = date, y = n)) + geom_line() + labs(y = 'Frequency')
 ```
 
-![](incident_EDA_files/figure-markdown_github/unnamed-chunk-11-1.png)
+![](incident_EDA_files/figure-markdown_github/unnamed-chunk-12-1.png)
 
 Look at monthly trend in EMS rescue incident
 --------------------------------------------
@@ -199,7 +234,7 @@ incident_dat_2017 %>%
   scale_x_continuous(breaks = 1:12, labels = month.name)
 ```
 
-![](incident_EDA_files/figure-markdown_github/unnamed-chunk-12-1.png)
+![](incident_EDA_files/figure-markdown_github/unnamed-chunk-13-1.png)
 
 Look at hourly trend
 --------------------
@@ -211,7 +246,7 @@ incident_dat_2017 %>%
   ggplot(aes(x = hour, y = n)) + geom_line() + labs(y = 'Frequency')
 ```
 
-![](incident_EDA_files/figure-markdown_github/unnamed-chunk-13-1.png)
+![](incident_EDA_files/figure-markdown_github/unnamed-chunk-14-1.png)
 
 And look at lag time (average) by the hour
 ==========================================
@@ -226,7 +261,7 @@ incident_dat_2017 %>%
 
     ## Don't know how to automatically pick scale for object of type difftime. Defaulting to continuous.
 
-![](incident_EDA_files/figure-markdown_github/unnamed-chunk-14-1.png)
+![](incident_EDA_files/figure-markdown_github/unnamed-chunk-15-1.png)
 
 ``` r
 incident_dat_2017 %>%
@@ -239,7 +274,7 @@ incident_dat_2017 %>%
 
     ## `geom_smooth()` using method = 'gam' and formula 'y ~ s(x, bs = "cs")'
 
-![](incident_EDA_files/figure-markdown_github/unnamed-chunk-15-1.png)
+![](incident_EDA_files/figure-markdown_github/unnamed-chunk-16-1.png)
 
 Hour of the day vs frequency, mean response time
 ------------------------------------------------
@@ -272,7 +307,7 @@ grid.draw(rbind(ggplotGrob(hourly_freq), ggplotGrob(hourly_time), size = "last")
 
     ## `geom_smooth()` using method = 'gam' and formula 'y ~ s(x, bs = "cs")'
 
-![](incident_EDA_files/figure-markdown_github/unnamed-chunk-16-1.png)
+![](incident_EDA_files/figure-markdown_github/unnamed-chunk-17-1.png)
 
 Month vs frequency, mean response time
 --------------------------------------
@@ -351,4 +386,102 @@ resp_time_prcp + resp_time_snow
     ## Don't know how to automatically pick scale for object of type difftime. Defaulting to continuous.
     ## Don't know how to automatically pick scale for object of type difftime. Defaulting to continuous.
 
-![](incident_EDA_files/figure-markdown_github/unnamed-chunk-18-1.png)
+![](incident_EDA_files/figure-markdown_github/unnamed-chunk-19-1.png)
+
+Tabulized 5min- 5min+ snow
+--------------------------
+
+``` r
+incident_weather %>% 
+  na.omit() %>% 
+  mutate(prcp = prcp > 0,
+         snow = snow > 0,
+         over_5min = ifelse(response_time > 5, "5min+", "5min-")) %>%
+  group_by(over_5min) %>%
+  summarize(prcp_prop = mean(prcp),
+            snow_prop = mean(snow)) %>% 
+  knitr::kable(digits = 3)
+```
+
+| over\_5min |  prcp\_prop|  snow\_prop|
+|:-----------|-----------:|-----------:|
+| 5min-      |       0.324|       0.025|
+| 5min+      |       0.330|       0.033|
+
+Tabulized 5min- 5min+ snow in winter
+------------------------------------
+
+``` r
+incident_weather %>% 
+  mutate(prcp = prcp > 0,
+         snow = snow > 0,
+         over_5min = ifelse(response_time > 5, "5min+", "5min-"),
+         season = 
+           ifelse(incident_month %in% 9:11, "Fall",
+           ifelse(incident_month %in% c(12,1,2), "Winter",
+           ifelse(incident_month %in% 3:5, "Spring", "Summer")))) %>% 
+  filter(season == "Winter") %>% 
+  group_by(over_5min) %>%
+  summarize(snow_prop = mean(snow)) %>% 
+  knitr::kable(digits = 3)
+```
+
+| over\_5min |  snow\_prop|
+|:-----------|-----------:|
+| 5min-      |       0.089|
+| 5min+      |       0.112|
+
+neighborhood
+------------
+
+``` r
+library(grid)
+
+neighborhood_freq = 
+  incident_dat_2017 %>% 
+  na.omit() %>% 
+  group_by(neighborhood) %>% 
+  count() %>% 
+  ungroup() %>% 
+  mutate(neighborhood = forcats::fct_reorder(neighborhood, n, 
+                                         .asc = TRUE)) %>% 
+  ggplot(aes(x = neighborhood, y = n)) + 
+  geom_point() +
+  labs(x = "neighborhood", y = "Frequency") +
+  theme_bw() +
+  theme(axis.text.x = element_text(angle = 45)) 
+
+neighborhood_time = 
+  incident_dat_2017 %>%
+  na.omit() %>% 
+  group_by(neighborhood) %>% 
+  summarise(mean_resp_time = mean(response_time)) %>% 
+  mutate(neighborhood = forcats::fct_reorder(neighborhood, mean_resp_time, 
+                                         .asc = TRUE)) %>% 
+  ggplot(aes(x = neighborhood, y = mean_resp_time)) + 
+  geom_point() +
+  labs(x = "neighborhood", y = "Mean response time") +
+  theme_bw() +
+  theme(axis.text.x = element_text(angle = 45))
+
+grid.newpage()
+grid.draw(rbind(ggplotGrob(neighborhood_freq), ggplotGrob(neighborhood_time), size = "last"))
+```
+
+    ## Don't know how to automatically pick scale for object of type difftime. Defaulting to continuous.
+
+![](incident_EDA_files/figure-markdown_github/unnamed-chunk-22-1.png)
+
+Hour of the day frequency facet 5 min
+-------------------------------------
+
+``` r
+  # incident_5min %>% 
+  # group_by(hour, over_5min) %>% 
+  # count() %>% 
+  # ggplot(aes(x = hour, y = n)) + 
+  # geom_line() +
+  # labs(x = "Hour of the day", y = "Frequency") +
+  # theme_bw() +
+  # facet_grid(~ over_5min)
+```

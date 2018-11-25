@@ -11,6 +11,10 @@ library(lubridate)
 library(xml2)
 library(rvest)
 library(patchwork)
+library(viridis)
+library(ggmap)
+library(jpeg)
+library(grid)
 ```
 
 ##### Data sets ######
@@ -28,7 +32,7 @@ incident_dat_2017 <-
   filter(year(incident_date_time) == 2017,
          incident_type_desc == "300 - Rescue, EMS incident, other") %>% 
   select(im_incident_key, incident_date_time, arrival_date_time,
-         street_highway:borough_desc) %>% 
+        street_highway:borough_desc) %>% 
   na.omit() %>% 
 
   # Added response time(minute) variable
@@ -47,6 +51,37 @@ incident_dat_2017 <-
          incident_day = as.numeric(incident_day))
 ```
 
+## adding a graph overlap with response time 
+
+```{r map}
+#Overlapping plots on map for EDA (abhishek)
+nyc_pic = readJPEG("nyc-boroughs-map.jpg")
+
+zip_coor = read.csv("./data/US Zip Codes from 2013 Government Data")
+
+zip_coor =
+  zip_coor %>% 
+  janitor::clean_names() %>% 
+  rename(zip_code = zip, long = lng)
+  
+incident_zip_coor = merge(incident_dat_2017, zip_coor)
+
+map_overlap = 
+  incident_zip_coor %>%
+  group_by(zip_code) %>% 
+  mutate(response_time = as.numeric(response_time)) %>%
+  mutate(mean_res_time = mean(response_time)) %>% 
+  ggplot(aes(x = long, y = lat, size = mean_res_time, color = mean_res_time)) +
+  annotation_custom(rasterGrob(nyc_pic, 
+                               width = unit(1,"npc"), 
+                               height = unit(1,"npc")), 
+                               -Inf, Inf, -Inf, Inf) +
+  geom_point() +
+  viridis::scale_color_viridis() + theme_set(theme_bw() + theme(legend.position = "bottom"))
+
+
+ggsave("map_overlap.jpg", map_overlap, width = 8, height = 5)
+```
 
 ## Added neighborhood variable
 ```{r fig.height = 8, include = FALSE}

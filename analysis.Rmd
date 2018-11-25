@@ -1,0 +1,113 @@
+---
+title: "analysis"
+author: "pc2853"
+date: "November 23, 2018"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+library(tidyverse)
+library(lubridate)
+library(xml2)
+library(rvest)
+library(patchwork)
+library(ggplot2)
+library(knitr)
+```
+
+This analysis is based on the final data set "finaldat.RData" and its subset data corresponding to 2 neighborhoods "subset_dat.RData". These two datasets are built by running the code from "Data_prep.Rmd" and "Data_merge.Rmd" by Dew. The default significance level is 0.05.
+
+```{r}
+load('data/finaldat.RData')
+
+
+load('data/subset_dat.RData')
+
+
+```
+
+1. hour of the day vs log response time ---- ANOVA MODEL
+
+```{r}
+fit_1 = lm(log_response_time~hour_of_day, data = finaldat)
+kable(anova(fit_1))
+```
+
+Ho: different hour of the day makes no difference in logs response time.
+p-value: very small.
+conclusion: There is a difference of log response time in different time/hour of the day.
+
+2. snow & prcp vs log response time ----- linear regression
+```{r}
+fit_2 = lm(log_response_time~snow, data = finaldat)
+fit_2 %>% 
+  broom::tidy() %>% 
+  knitr::kable(digits = 3)
+fit_2_2 = lm(log_response_time~prcp, data = finaldat)
+fit_2_2 %>% 
+  broom::tidy() %>% 
+  knitr::kable(digits = 3)
+
+```
+
+
+H0: There is no correlation between snow and log_response_time
+p-value: very small
+estimate: positive
+conclusion: There is a positive correlation between snow and log response time. 
+
+3. seasons vs log response time ----- ANOVA
+```{r}
+fit_3 = lm(log_response_time~season, data = finaldat)
+kable(anova(fit_3))
+```
+
+Ho: different seasons make no difference in logs response time.
+p-value: very small.
+conclusion: There is a difference of log response time in different seasons.
+
+4. MLR based on snow, prcp, tmax, tmin(factors of nature environment) in different hour of the day----- MLR model
+```{r}
+fit_4 = lm(log_response_time~snow + prcp + tmax + tmin, data = finaldat)
+fit_4 %>% 
+  broom::tidy() %>% 
+  knitr::kable(digits = 3)
+
+fit_4_2 = finaldat %>% 
+  group_by(hour_of_day) %>% 
+  nest() %>% 
+  mutate(models = map(data, ~lm(log_response_time ~ snow + prcp + tmax + tmin, data = .x)),
+         models = map(models, broom::tidy)) %>% 
+  select(-data) %>% 
+  unnest()
+
+fit_4_2 %>% 
+  select(hour_of_day, term, estimate) %>% 
+  mutate(term = fct_inorder(term)) %>% 
+  spread(key = term, value = estimate) %>% 
+  knitr::kable(digits = 3)
+```
+
+Despite there are correlations, the estimates are really small. 
+
+
+### estimate the effect of Street closure on response time in the selected two neighborhoods. 
+5. street closure(binary data 0 or 1) vs log response time ------ t-test
+```{r}
+t.test(log_response_time~street_closed, data = dat_subset) %>% 
+  broom::tidy() %>% 
+  select(estimate, p.value, conf.low, conf.high, method, alternative) %>% 
+  knitr::kable(diigts = 3)
+#just curious about the visualization
+dat_subset %>% 
+  mutate(street_closed = as.factor(street_closed)) %>% 
+  ggplot(aes(x = street_closed, y = log_response_time, color = neighborhood)) + 
+  geom_boxplot()
+#actually the difference is really small.  
+
+```
+
+H0: The presence of street closure affects log response time.
+p value: 0.036 < 0.05
+conclusion: Having street closure while incident happens affects the log response time. 
+

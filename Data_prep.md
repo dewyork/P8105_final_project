@@ -7,6 +7,18 @@ November 10, 2018
 library(tidyverse)
 ```
 
+<<<<<<< HEAD
+    ## -- Attaching packages ---------------------------------------------------------------------------------------------------------------- tidyverse 1.2.1 --
+
+    ## v ggplot2 3.0.0     v purrr   0.2.5
+    ## v tibble  1.4.2     v dplyr   0.7.6
+    ## v tidyr   0.8.1     v stringr 1.3.1
+    ## v readr   1.1.1     v forcats 0.3.0
+
+    ## -- Conflicts ------------------------------------------------------------------------------------------------------------------- tidyverse_conflicts() --
+    ## x dplyr::filter() masks stats::filter()
+    ## x dplyr::lag()    masks stats::lag()
+=======
     ## ── Attaching packages ───────────────────────────────── tidyverse 1.2.1 ──
 
     ## ✔ ggplot2 3.0.0     ✔ purrr   0.2.5
@@ -17,6 +29,7 @@ library(tidyverse)
     ## ── Conflicts ──────────────────────────────────── tidyverse_conflicts() ──
     ## ✖ dplyr::filter() masks stats::filter()
     ## ✖ dplyr::lag()    masks stats::lag()
+>>>>>>> ebbd8c8d87c39a9366935fe7669a39af509146c1
 
 ``` r
 library(lubridate)
@@ -94,7 +107,11 @@ incident_dat_2017 <-
     ## a multiple of vector length (arg 1)
 
     ## Warning: 13119 parsing failures.
+<<<<<<< HEAD
+    ## row # A tibble: 5 x 5 col     row col        expected       actual            file                   expected   <int> <chr>      <chr>          <chr>             <chr>                  actual 1    91 FIRE_SPRE~ no trailing c~ " - Beyond build~ 'data/Incidents_Respo~ file 2   199 FIRE_SPRE~ no trailing c~ " - Confined to ~ 'data/Incidents_Respo~ row 3   440 FIRE_SPRE~ no trailing c~ " - Confined to ~ 'data/Incidents_Respo~ col 4   492 FIRE_SPRE~ no trailing c~ " - Confined to ~ 'data/Incidents_Respo~ expected 5   569 FIRE_SPRE~ no trailing c~ " - Confined to ~ 'data/Incidents_Respo~
+=======
     ## row # A tibble: 5 x 5 col     row col        expected       actual            file                   expected   <int> <chr>      <chr>          <chr>             <chr>                  actual 1    91 FIRE_SPRE… no trailing c… " - Beyond build… 'data/Incidents_Respo… file 2   199 FIRE_SPRE… no trailing c… " - Confined to … 'data/Incidents_Respo… row 3   440 FIRE_SPRE… no trailing c… " - Confined to … 'data/Incidents_Respo… col 4   492 FIRE_SPRE… no trailing c… " - Confined to … 'data/Incidents_Respo… expected 5   569 FIRE_SPRE… no trailing c… " - Confined to … 'data/Incidents_Respo…
+>>>>>>> ebbd8c8d87c39a9366935fe7669a39af509146c1
     ## ... ................. ... .......................................................................... ........ .......................................................................... ...... .......................................................................... .... .......................................................................... ... .......................................................................... ... .......................................................................... ........ ..........................................................................
     ## See problems(...) for more details.
 
