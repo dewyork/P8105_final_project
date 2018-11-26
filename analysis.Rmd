@@ -30,6 +30,7 @@ load('data/subset_dat.RData')
 
 ```{r}
 fit_1 = lm(log_response_time~hour_of_day, data = finaldat)
+summary(fit_1)
 kable(anova(fit_1))
 ```
 
@@ -81,6 +82,7 @@ fit_4_2 = finaldat %>%
   select(-data) %>% 
   unnest()
 
+summary(fit_4_2)
 fit_4_2 %>% 
   select(hour_of_day, term, estimate) %>% 
   mutate(term = fct_inorder(term)) %>% 
@@ -89,6 +91,39 @@ fit_4_2 %>%
 ```
 
 Despite there are correlations, the estimates are really small. 
+
+## Logistic regression with binary outcome 5min- / 5min+
+```{r}
+## Added snow and prcp categories
+finaldat_ctg = 
+  finaldat %>% 
+  mutate(over_5min = if_else((over_5min == "5min-"), 0, 1),
+         prcp_ctg = 
+           if_else(prcp == 0, "no_prcp",
+           if_else((prcp > 0 & prcp <= 25), "low", "high")),
+         snow_ctg = 
+           if_else(snow == 0, "no_snow",
+           if_else((snow > 0 & snow <= 50), "low", "high"))) 
+
+fit_logistic =
+  glm(over_5min ~ season + hour_of_day + snow_ctg + prcp_ctg, 
+      family = binomial(), data = finaldat_ctg)
+
+summary(fit_logistic)
+
+fit_logistic %>% 
+  broom::tidy() %>% 
+  mutate(OR = exp(estimate),
+         lower_CI_OR = exp(estimate - 1.96*std.error),
+         upper_CI_OR = exp(estimate + 1.96*std.error)) %>% 
+  select(term, OR, lower_CI_OR, upper_CI_OR) %>% 
+  ggplot(aes(x = term, y = OR)) + 
+  geom_point() + 
+  geom_errorbar(aes(ymin = lower_CI_OR, ymax = upper_CI_OR), 
+                color = "darkred") +
+  coord_flip()
+```
+
 
 
 ### estimate the effect of Street closure on response time in the selected two neighborhoods. 
