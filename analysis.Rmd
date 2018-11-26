@@ -124,7 +124,7 @@ fit_logistic %>%
   coord_flip()
 ```
 
-## Mean response time in snowy condition
+## (1) Mean response time in snowy condition
 
 ```{r}
 ## OR result above matches with the results below
@@ -149,6 +149,16 @@ finaldat %>%
         legend.position = "None") 
 ```
 
+## (2) Response time (smoothed line) by hour of the day
+
+```{r}
+finaldat %>%
+    group_by(hour) %>% 
+  ggplot(aes(x = hour, y = response_time)) + 
+  geom_smooth(se = FALSE) +
+  labs(x = "Hour of the day", y = "Mean response time") +
+  theme_bw()
+```
 
 ### estimate the effect of Street closure on response time in the selected two neighborhoods. 
 5. street closure(binary data 0 or 1) vs log response time ------ t-test
