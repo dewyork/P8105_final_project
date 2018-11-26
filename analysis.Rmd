@@ -124,6 +124,30 @@ fit_logistic %>%
   coord_flip()
 ```
 
+## Mean response time in snowy condition
+
+```{r}
+## OR result above matches with the results below
+finaldat %>% 
+  mutate(snow = snow > 0) %>%
+  group_by(date, snow) %>% 
+  summarise(mean_resp_time = mean(response_time)) %>% 
+  ggplot(aes(x = snow, y = mean_resp_time)) +
+  geom_violin(aes(fill = factor(snow)), alpha = .5) +
+  stat_summary(fun.y = mean, geom = "point", size = 4, color = "blue") +
+  labs(
+    title = "Mean response time in snowy conditions",
+    y = "Mean response time",
+    x = "Snow"
+  ) +
+  viridis::scale_fill_viridis(
+    name = "Snow",
+    discrete = TRUE) +
+  theme(plot.title = element_text(size = 12),
+        strip.background = element_rect(fill = "black"),
+        strip.text = element_text(color = "white", face = "bold"),
+        legend.position = "None") 
+```
 
 
 ### estimate the effect of Street closure on response time in the selected two neighborhoods. 
