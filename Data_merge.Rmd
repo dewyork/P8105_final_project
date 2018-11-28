@@ -138,7 +138,6 @@ save(dat_subset, file = "data/subset_dat.RData")
 # t.test(log(as.numeric(response_time)) ~ street_closed, data = dat_subset)
 # 
 
-
 ```
 
 
