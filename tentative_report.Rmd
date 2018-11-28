@@ -5,10 +5,6 @@ date: "11/25/2018"
 output: html_document
 ---
 
-```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
-```
-
 ###Motivation:
 
 A major concern in emergency medical services (EMS) planning has been the need to minimize response time to better patient outcome, translated by some EMS operations into a goal of a response time of 8 minutes or less for advanced life support (ALS) units responding to life-threatening events. An exploratory analysis suggested there may be a small beneficial effect of response ≤7 minutes 59 seconds for those who survived to become an inpatient. More information on this can be found [here](https://www.ncbi.nlm.nih.gov/pubmed/11927452) and [here](https://www.ncbi.nlm.nih.gov/pubmed/22026820)
