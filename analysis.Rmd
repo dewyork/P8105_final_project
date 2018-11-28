@@ -103,7 +103,11 @@ finaldat_ctg =
            if_else((prcp > 0 & prcp <= 25), "low", "high")),
          snow_ctg = 
            if_else(snow == 0, "no_snow",
-           if_else((snow > 0 & snow <= 50), "low", "high"))) 
+           if_else((snow > 0 & snow <= 50), "low", "high")),
+         prcp_ctg = fct_relevel(prcp_ctg, "no_prcp"),
+         snow_ctg = fct_relevel(snow_ctg, "no_snow"),
+         season = fct_relevel(season, "Spring"),
+         hour_of_day = fct_relevel(hour_of_day, "morning")) 
 
 fit_logistic =
   glm(over_5min ~ season + hour_of_day + snow_ctg + prcp_ctg, 
@@ -117,11 +121,67 @@ fit_logistic %>%
          lower_CI_OR = exp(estimate - 1.96*std.error),
          upper_CI_OR = exp(estimate + 1.96*std.error)) %>% 
   select(term, OR, lower_CI_OR, upper_CI_OR) %>% 
+  mutate(term = fct_reorder(term, OR)) %>% 
   ggplot(aes(x = term, y = OR)) + 
   geom_point() + 
   geom_errorbar(aes(ymin = lower_CI_OR, ymax = upper_CI_OR), 
                 color = "darkred") +
-  coord_flip()
+  coord_flip() +
+  geom_hline(yintercept = 1.0, color = "blue") +
+  theme_bw()
+
+## prcp_ctg
+fit_logistic %>% 
+  broom::tidy() %>% 
+  filter(str_detect(term, "prcp_ctg")) %>% 
+  mutate(OR = exp(estimate),
+         lower_CI_OR = exp(estimate - 1.96*std.error),
+         upper_CI_OR = exp(estimate + 1.96*std.error)) %>% 
+  select(term, OR, lower_CI_OR, upper_CI_OR) %>% 
+  mutate(term = fct_reorder(term, OR)) %>% 
+  ggplot(aes(x = term, y = OR)) + 
+  geom_point() + 
+  geom_errorbar(aes(ymin = lower_CI_OR, ymax = upper_CI_OR), 
+                color = "darkred") +
+  scale_y_continuous(limits = c(0.5, 1.8)) +
+  coord_flip() +
+  geom_hline(yintercept = 1.0, color = "blue") +
+  theme_bw() 
+
+## snow_ctg
+fit_logistic %>% 
+  broom::tidy() %>% 
+  filter(str_detect(term, "snow_ctg")) %>% 
+  mutate(OR = exp(estimate),
+         lower_CI_OR = exp(estimate - 1.96*std.error),
+         upper_CI_OR = exp(estimate + 1.96*std.error)) %>% 
+  select(term, OR, lower_CI_OR, upper_CI_OR) %>% 
+  mutate(term = fct_reorder(term, OR)) %>% 
+  ggplot(aes(x = term, y = OR)) + 
+  geom_point() + 
+  geom_errorbar(aes(ymin = lower_CI_OR, ymax = upper_CI_OR), 
+                color = "darkred") +
+  scale_y_continuous(limits = c(0.5, 1.8)) +
+  coord_flip() +
+  geom_hline(yintercept = 1.0, color = "blue") +
+  theme_bw()
+
+## Hour of day
+fit_logistic %>% 
+  broom::tidy() %>% 
+  filter(str_detect(term, "hour_of_day")) %>% 
+  mutate(OR = exp(estimate),
+         lower_CI_OR = exp(estimate - 1.96*std.error),
+         upper_CI_OR = exp(estimate + 1.96*std.error)) %>% 
+  select(term, OR, lower_CI_OR, upper_CI_OR) %>% 
+  mutate(term = fct_reorder(term, OR)) %>% 
+  ggplot(aes(x = term, y = OR)) + 
+  geom_point() + 
+  geom_errorbar(aes(ymin = lower_CI_OR, ymax = upper_CI_OR), 
+                color = "darkred") +
+  coord_flip() +
+  geom_hline(yintercept = 1.0, color = "blue") +
+  theme_bw()
 ```
 
 ## (1) Mean response time in snowy condition
@@ -157,8 +217,106 @@ finaldat %>%
   ggplot(aes(x = hour, y = response_time)) + 
   geom_smooth(se = FALSE) +
   labs(x = "Hour of the day", y = "Mean response time") +
+  geom_vline(xintercept = c(6, 13, 18), color = "green") +
   theme_bw()
 ```
+
+## Logistic regression with binary outcome 8min- / 8min+
+```{r}
+
+finaldat_8min =
+  finaldat %>% 
+  mutate(over_8min = ifelse(response_time > 8, "8min+", "8min-"))
+## Added snow and prcp categories
+finaldat_ctg_8min = 
+  finaldat_8min %>% 
+  mutate(over_8min = if_else((over_8min == "8min-"), 0, 1),
+         prcp_ctg = 
+           if_else(prcp == 0, "no_prcp",
+           if_else((prcp > 0 & prcp <= 25), "low", "high")),
+         snow_ctg = 
+           if_else(snow == 0, "no_snow",
+           if_else((snow > 0 & snow <= 50), "low", "high")),
+         prcp_ctg = fct_relevel(prcp_ctg, "no_prcp"),
+         snow_ctg = fct_relevel(snow_ctg, "no_snow"),
+         season = fct_relevel(season, "Spring"),
+         hour_of_day = fct_relevel(hour_of_day, "morning")) 
+
+fit_logistic_8min =
+  glm(over_8min ~ season + hour_of_day + snow_ctg + prcp_ctg, 
+      family = binomial(), data = finaldat_ctg_8min)
+
+summary(fit_logistic_8min)
+
+fit_logistic_8min %>% 
+  broom::tidy() %>% 
+  mutate(OR = exp(estimate),
+         lower_CI_OR = exp(estimate - 1.96*std.error),
+         upper_CI_OR = exp(estimate + 1.96*std.error)) %>% 
+  select(term, OR, lower_CI_OR, upper_CI_OR) %>% 
+  mutate(term = fct_reorder(term, OR)) %>% 
+  ggplot(aes(x = term, y = OR)) + 
+  geom_point() + 
+  geom_errorbar(aes(ymin = lower_CI_OR, ymax = upper_CI_OR), 
+                color = "darkred") +
+  coord_flip() +
+  geom_hline(yintercept = 1.0, color = "blue") +
+  theme_bw()
+
+## prcp_ctg
+fit_logistic_8min %>% 
+  broom::tidy() %>% 
+  filter(str_detect(term, "prcp_ctg")) %>% 
+  mutate(OR = exp(estimate),
+         lower_CI_OR = exp(estimate - 1.96*std.error),
+         upper_CI_OR = exp(estimate + 1.96*std.error)) %>% 
+  select(term, OR, lower_CI_OR, upper_CI_OR) %>% 
+  mutate(term = fct_reorder(term, OR)) %>% 
+  ggplot(aes(x = term, y = OR)) + 
+  geom_point() + 
+  geom_errorbar(aes(ymin = lower_CI_OR, ymax = upper_CI_OR), 
+                color = "darkred") +
+  scale_y_continuous(limits = c(0.5, 1.8)) +
+  coord_flip() +
+  geom_hline(yintercept = 1.0, color = "blue") +
+  theme_bw() 
+
+## snow_ctg
+fit_logistic_8min %>% 
+  broom::tidy() %>% 
+  filter(str_detect(term, "snow_ctg")) %>% 
+  mutate(OR = exp(estimate),
+         lower_CI_OR = exp(estimate - 1.96*std.error),
+         upper_CI_OR = exp(estimate + 1.96*std.error)) %>% 
+  select(term, OR, lower_CI_OR, upper_CI_OR) %>% 
+  mutate(term = fct_reorder(term, OR)) %>% 
+  ggplot(aes(x = term, y = OR)) + 
+  geom_point() + 
+  geom_errorbar(aes(ymin = lower_CI_OR, ymax = upper_CI_OR), 
+                color = "darkred") +
+  scale_y_continuous(limits = c(0.5, 1.8)) +
+  coord_flip() +
+  geom_hline(yintercept = 1.0, color = "blue") +
+  theme_bw()
+
+## Hour of day
+fit_logistic_8min %>% 
+  broom::tidy() %>% 
+  filter(str_detect(term, "hour_of_day")) %>% 
+  mutate(OR = exp(estimate),
+         lower_CI_OR = exp(estimate - 1.96*std.error),
+         upper_CI_OR = exp(estimate + 1.96*std.error)) %>% 
+  select(term, OR, lower_CI_OR, upper_CI_OR) %>% 
+  mutate(term = fct_reorder(term, OR)) %>% 
+  ggplot(aes(x = term, y = OR)) + 
+  geom_point() + 
+  geom_errorbar(aes(ymin = lower_CI_OR, ymax = upper_CI_OR), 
+                color = "darkred") +
+  coord_flip() +
+  geom_hline(yintercept = 1.0, color = "blue") +
+  theme_bw()
+```
+
 
 ### estimate the effect of Street closure on response time in the selected two neighborhoods. 
 5. street closure(binary data 0 or 1) vs log response time ------ t-test
