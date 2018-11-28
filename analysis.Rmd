@@ -97,7 +97,7 @@ Despite there are correlations, the estimates are really small.
 t.test(log_response_time~street_closed, data = dat_subset) %>% 
   broom::tidy() %>% 
   select(estimate, p.value, conf.low, conf.high, method, alternative) %>% 
-  knitr::kable(diigts = 3)
+  knitr::kable(digits = 3)
 #just curious about the visualization
 dat_subset %>% 
   mutate(street_closed = as.factor(street_closed)) %>% 
