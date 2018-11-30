@@ -318,7 +318,7 @@ fit_logistic_8min %>%
 ```
 
 
-### estimate the effect of Street closure on response time in the selected two neighborhoods. 
+### estimate the effect of Street closure on response time in the selected two neighborhoods. (because the street closure data is recorded based on street junctions, and there is no zipcode recorded in the otiginal dataset, we need to link zipcode to every street junction in the dataset in order to merge it with the response time data. This required a lot of work, and thus to only did it with two neighborhood areas, the UWS and Washington Heights. )
 5. street closure(binary data 0 or 1) vs log response time ------ t-test
 ```{r}
 t.test(log_response_time~street_closed, data = dat_subset) %>% 
@@ -337,4 +337,5 @@ dat_subset %>%
 H0: The presence of street closure affects log response time.
 p value: 0.036 < 0.05
 conclusion: Having street closure while incident happens affects the log response time. 
+
 
