@@ -46,7 +46,7 @@ library(xml2)
 library(rvest)
 library(rnoaa)
 library(knitr)
-
+library(patchwork)
 knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE)
 
 theme_set(theme_bw())
@@ -294,7 +294,7 @@ finaldat %>%
 
 snow_eda =
   finaldat %>% 
-  mutate(snow_ctg = fct_relevel(snow_ctg, c("no_snow", "low", "high"))) %>% 
+  mutate(snow_ctg = fct_relevel(snow_ctg, c("no_snow", "low", "high"))) %>%
   group_by(date, snow_ctg) %>% 
   summarise(mean_resp_time = mean(response_time)) %>% 
   ggplot(aes(x = snow_ctg, y = mean_resp_time)) +
