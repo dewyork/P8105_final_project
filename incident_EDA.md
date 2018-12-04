@@ -7,14 +7,14 @@ November 10, 2018
 library(tidyverse)
 ```
 
-    ## -- Attaching packages ----------------------------------------------------------------------------- tidyverse 1.2.1 --
+    ## -- Attaching packages ------------------------------------------------------------------------------------------------------ tidyverse 1.2.1 --
 
     ## v ggplot2 3.0.0     v purrr   0.2.5
     ## v tibble  1.4.2     v dplyr   0.7.6
     ## v tidyr   0.8.1     v stringr 1.3.1
     ## v readr   1.1.1     v forcats 0.3.0
 
-    ## -- Conflicts -------------------------------------------------------------------------------- tidyverse_conflicts() --
+    ## -- Conflicts --------------------------------------------------------------------------------------------------------- tidyverse_conflicts() --
     ## x dplyr::filter() masks stats::filter()
     ## x dplyr::lag()    masks stats::lag()
 
@@ -78,6 +78,16 @@ zip_coor =
   rename(zip_code = zip, long = lng)
   
 incident_zip_coor = merge(incident_dat_2017, zip_coor)
+
+data_doubt = 
+  incident_zip_coor %>%
+  group_by(zip_code) %>% 
+  mutate(mean_res_time = mean(response_time), 
+         binary = ifelse(response_time > 8, 1, 0), 
+         n = n(), 
+         n_binary = sum(binary)) %>% 
+  select(zip_code, mean_res_time, binary, n, n_binary)
+  
 
 map_overlap = 
   incident_zip_coor %>%
@@ -431,6 +441,29 @@ incident_weather %>%
 | 5min-      |       0.089|
 | 5min+      |       0.112|
 
+Tabulized 7min- 7min+ snow in winter
+------------------------------------
+
+``` r
+incident_weather %>% 
+  mutate(prcp = prcp > 0,
+         snow = snow > 0,
+         over_7min = ifelse(response_time > 7, "7min+", "7min-"),
+         season = 
+           ifelse(incident_month %in% 9:11, "Fall",
+           ifelse(incident_month %in% c(12,1,2), "Winter",
+           ifelse(incident_month %in% 3:5, "Spring", "Summer")))) %>% 
+  filter(season == "Winter") %>% 
+  group_by(over_7min) %>%
+  summarize(snow_prop = mean(snow)) %>% 
+  knitr::kable(digits = 3)
+```
+
+| over\_7min |  snow\_prop|
+|:-----------|-----------:|
+| 7min-      |       0.095|
+| 7min+      |       0.122|
+
 neighborhood
 ------------
 
@@ -470,7 +503,7 @@ grid.draw(rbind(ggplotGrob(neighborhood_freq), ggplotGrob(neighborhood_time), si
 
     ## Don't know how to automatically pick scale for object of type difftime. Defaulting to continuous.
 
-![](incident_EDA_files/figure-markdown_github/unnamed-chunk-22-1.png)
+![](incident_EDA_files/figure-markdown_github/unnamed-chunk-23-1.png)
 
 Hour of the day frequency facet 5 min
 -------------------------------------
