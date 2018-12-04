@@ -717,7 +717,7 @@ fit_logistic_8min %&gt;%
 <pre class="r"><code>t.test(log_response_time~street_closed, data = dat_subset) %&gt;% 
   broom::tidy() %&gt;% 
   select(estimate, p.value, conf.low, conf.high, method, alternative) %&gt;% 
-  knitr::kable(diigts = 3)</code></pre>
+  knitr::kable(digits = 3)</code></pre>
 <table>
 <thead>
 <tr class="header">
@@ -731,10 +731,10 @@ fit_logistic_8min %&gt;%
 </thead>
 <tbody>
 <tr class="odd">
-<td align="right">-0.0305088</td>
-<td align="right">0.0356742</td>
-<td align="right">-0.058972</td>
-<td align="right">-0.0020457</td>
+<td align="right">-0.031</td>
+<td align="right">0.036</td>
+<td align="right">-0.059</td>
+<td align="right">-0.002</td>
 <td align="left">Welch Two Sample t-test</td>
 <td align="left">two.sided</td>
 </tr>

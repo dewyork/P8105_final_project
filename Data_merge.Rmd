@@ -70,7 +70,8 @@ finaldat =
            ifelse(hour %in% 6:12, "morning",
            ifelse(hour %in% 13:17, "afternoon",
            ifelse(hour %in% 18:23, "night","dawn"))), 
-         over_5min = ifelse(response_time > 5, "5min+", "5min-"))
+         over_8min = ifelse(response_time > 8, "8min+", "8min-"))
+
 
 save(finaldat, file = "data/finaldat.RData")
 
@@ -136,7 +137,7 @@ save(dat_subset, file = "data/subset_dat.RData")
 # summary(street_closed)
 # 
 # t.test(log(as.numeric(response_time)) ~ street_closed, data = dat_subset)
-# 
+
 
 ```
 
