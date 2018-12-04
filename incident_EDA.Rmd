@@ -66,6 +66,8 @@ zip_coor =
   
 incident_zip_coor = merge(incident_dat_2017, zip_coor)
 
+save(incident_zip_coor, file = "data/incident_zip_coor.RData")
+
 map_overlap = 
   incident_zip_coor %>%
   group_by(zip_code) %>% 
