@@ -7,14 +7,14 @@ November 10, 2018
 library(tidyverse)
 ```
 
-    ## -- Attaching packages ---------------------------------------------- tidyverse 1.2.1 --
+    ## -- Attaching packages ------------------------------------------------- tidyverse 1.2.1 --
 
     ## v ggplot2 3.0.0     v purrr   0.2.5
     ## v tibble  1.4.2     v dplyr   0.7.6
     ## v tidyr   0.8.1     v stringr 1.3.0
     ## v readr   1.1.1     v forcats 0.3.0
 
-    ## -- Conflicts ------------------------------------------------- tidyverse_conflicts() --
+    ## -- Conflicts ---------------------------------------------------- tidyverse_conflicts() --
     ## x dplyr::filter() masks stats::filter()
     ## x dplyr::lag()    masks stats::lag()
 
@@ -116,7 +116,8 @@ finaldat =
            ifelse(hour %in% 6:12, "morning",
            ifelse(hour %in% 13:17, "afternoon",
            ifelse(hour %in% 18:23, "night","dawn"))), 
-         over_5min = ifelse(response_time > 5, "5min+", "5min-"))
+         over_8min = ifelse(response_time > 8, "8min+", "8min-"))
+
 
 save(finaldat, file = "data/finaldat.RData")
 ```
