@@ -354,7 +354,7 @@ load(&#39;data/finaldat.RData&#39;)</code></pre>
   group_by(hour) %&gt;% 
   ggplot(aes(x = hour, y = response_time)) + 
   geom_smooth(se = FALSE) </code></pre>
-<p><img src="tentative_report_files/figure-html/unnamed-chunk-4-1.png" width="672" /></p>
+<p><img src="final_report_files/figure-html/unnamed-chunk-4-1.png" width="672" /></p>
 <ol start="2" style="list-style-type: decimal">
 <li>Response time in rainy and snowy days</li>
 </ol>
@@ -377,7 +377,7 @@ load(&#39;data/finaldat.RData&#39;)</code></pre>
         strip.background = element_rect(fill = &quot;black&quot;),
         strip.text = element_text(color = &quot;white&quot;, face = &quot;bold&quot;),
         legend.position = &quot;None&quot;) </code></pre>
-<p><img src="tentative_report_files/figure-html/unnamed-chunk-5-1.png" width="672" /></p>
+<p><img src="final_report_files/figure-html/unnamed-chunk-5-1.png" width="672" /></p>
 <pre class="r"><code>finaldat %&gt;% 
   mutate(snow = snow &gt; 0) %&gt;%
   group_by(date, snow) %&gt;% 
@@ -397,7 +397,7 @@ load(&#39;data/finaldat.RData&#39;)</code></pre>
         strip.background = element_rect(fill = &quot;black&quot;),
         strip.text = element_text(color = &quot;white&quot;, face = &quot;bold&quot;),
         legend.position = &quot;None&quot;) </code></pre>
-<p><img src="tentative_report_files/figure-html/unnamed-chunk-5-2.png" width="672" /></p>
+<p><img src="final_report_files/figure-html/unnamed-chunk-5-2.png" width="672" /></p>
 <p>We showed some trends by hour of the day and by snowy conditions. Based on this result, we fit linear regression.</p>
 </div>
 <div id="step-2-2-linear-regression" class="section level4">
@@ -1201,7 +1201,7 @@ OR =
 
 ggsave(&quot;OR.png&quot;, plot = OR, width = 45, height = 25, units = &quot;cm&quot;)
 OR</code></pre>
-<p><img src="tentative_report_files/figure-html/unnamed-chunk-12-1.png" width="672" /></p>
+<p><img src="final_report_files/figure-html/unnamed-chunk-12-1.png" width="672" /></p>
 <p>Based on EDA, to get statistical analysis, we fit logistic regression and results are followings: - Snow: As expected from EDA, compared to no snow conditions, odds of over 8min response time is increased 24% by 0~50mm snow and 47% by over 50mm snow. - Season: Compared to Spring, Summer does not affect odds of over 8min response time but odds is increased in Fall by 6% and in Winter by 7%. - Rain: Statistically significant result was not obtained from rain variable and it matches the result of EDA. - Hour of the day: In reference to night, odds of over 8min response time is increased at dawn by 26%, in the morning by 37% and in the afternoon by 35%.</p>
 </div>
 </div>
@@ -1830,7 +1830,7 @@ OR_all &lt;-
 
 ggsave(&quot;OR_all.png&quot;, plot = OR_all, width = 45, height = 25, units = &quot;cm&quot;)
 OR_all</code></pre>
-<p><img src="tentative_report_files/figure-html/plot_OR-1.png" width="672" /></p>
+<p><img src="final_report_files/figure-html/plot_OR-1.png" width="672" /></p>
 </div>
 <div id="step-4-4-fitting-regression-model-by-neighborhood" class="section level4">
 <h4>step 4-4 Fitting regression model by neighborhood</h4>
