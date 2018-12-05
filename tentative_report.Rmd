@@ -558,7 +558,7 @@ save(street_closure_2017, file = "data/street_closure_2017.RData")
 #### step 4-2 Add street closure data and create subset data for UWS and WH
 ```{r}
 #list of streets of intereste
-street_zip <- read_excel('data/street_junctions_zipcode.xlsx') %>% 
+street_zip <- read_excel('./data/street_junctions_zipcode.xlsx') %>% 
   #delete white space from street name 
   mutate(A = toupper(str_replace_all(street_A, fixed(" "), "")),
          B = toupper(str_replace_all(street_B, fixed(" "), "")))
@@ -578,8 +578,8 @@ check_street_closure <- function(datetime, zip){
   zipcode_closure <- street_closure_UWS_WH %>% 
     filter(zipcode == zip) %>% 
     mutate(street_closed = ifelse(work_start_date < datetime & work_end_date > datetime, 1, 0))
-  
-  if( sum(zipcode_closure$street_closed) > 0){
+
+  if (sum(zipcode_closure$street_closed) > 0) {
     return(1)
   } else {return(0)}
 }
@@ -597,77 +597,87 @@ save(dat_subset, file = "data/subset_dat.RData")
 
 #### step 4-3 Logistic regression and visualization with among UWS and Washington Heights
 ```{r}
-#uws_dat <- dat_subset %>% filter(neighborhood == 'Upper West Side')
-#fit_logistic_uws =
-#  glm(over_8min ~ season + hour_of_day + snow_ctg + prcp_ctg + street_closed, 
-  #    family = binomial(), data = uws_dat)
+uws_dat = dat_subset %>% 
+  filter(neighborhood == 'Upper West Side')
 
-#summary(fit_logistic_uws)
+fit_logistic_uws =
+  glm(over_8min ~ season + hour_of_day + snow_ctg + prcp_ctg + street_closed, 
+      family = binomial(), data = uws_dat)
+
+summary(fit_logistic_uws)
 ```
 
 ```{r}
-#wash_dat <- dat_subset %>% filter(neighborhood == 'Washington Heights')
+wash_dat <- 
+  dat_subset %>% 
+  filter(neighborhood == 'Inwood and Washington Heights')
 
-#fit_logistic_wash =
-#  glm(over_8min ~ season + hour_of_day + snow_ctg + prcp_ctg + street_closed, 
- #     family = binomial(), data = wash_dat)
+fit_logistic_wash =
+  glm(over_8min ~ season + hour_of_day + snow_ctg + prcp_ctg + street_closed, 
+      family = binomial(), 
+      data = wash_dat)
 
-#summary(fit_logistic_wash)
+summary(fit_logistic_wash)
 ```
 
 ```{r}
 #Prepare table for visualization
-#table_results_uws <-  fit_logistic_uws %>% 
- # broom::tidy() %>% 
- # mutate(OR = exp(estimate)) %>%
- # bind_cols(.,  exp(confint_tidy(fit_logistic_uws))) %>% 
- # select(term, OR, conf.low, conf.high) %>% 
- # filter(term != '(Intercept)') %>% 
-  #mutate(term = c("Fall", "Summer", "Winter", "Afternoon", "Dawn", "Morning", "snow 50+", "snow 50-", "prcp 25+", "prcp 25-", "Street closed"),
-   #      neightborhood = 'UWS') %>% 
-  # mutate(term = factor(term, levels = as.ordered(term)))
-# table_results_uws %>% 
-  # knitr::kable(digits = 3, "html") %>% 
- # kableExtra::kable_styling(bootstrap_options = c("striped", "hover"))
-
+table_results_uws <-  fit_logistic_uws %>% 
+  broom::tidy() %>% 
+  mutate(OR = exp(estimate)) %>%
+  bind_cols(.,  exp(confint_tidy(fit_logistic_uws))) %>% 
+  select(term, OR, conf.low, conf.high) %>% 
+  filter(term != '(Intercept)') %>% 
+  mutate(term = c("Fall", "Summer", "Winter", "Afternoon", "Dawn", "Morning", "snow 50+", "snow 50-", "prcp 25+", "prcp 25-", "Street closed"), 
+         neightborhood = 'UWS') %>% 
+   mutate(term = factor(term, levels = as.ordered(term)))
+ 
+table_results_uws %>% 
+   knitr::kable(digits = 3, "html") %>% 
+  kableExtra::kable_styling(bootstrap_options = c("striped", "hover"))
 ```
 
 ```{r}
-#table_results_wash <-  fit_logistic_wash %>% 
- # broom::tidy() %>% 
-  # mutate(OR = exp(estimate)) %>%
-#  bind_cols(.,  exp(confint_tidy(fit_logistic_wash))) %>% 
- # select(term, OR, conf.low, conf.high) %>% 
-  # filter(term != '(Intercept)') %>% 
- # mutate(term = c("Fall", "Summer", "Winter", "Afternoon", "Dawn", "Morning", "snow 50+", "snow 50-", "prcp 25+", "prcp 25-", "Street closed"),
-  #       neightborhood = 'Washington Heights') %>% 
-  # mutate(term = factor(term, levels = as.ordered(term)))
-# table_results_wash %>% 
- #  knitr::kable(digits = 3, "html") %>% 
- # kableExtra::kable_styling(bootstrap_options = c("striped", "hover"))
+table_results_wash =  
+  fit_logistic_wash %>% 
+  broom::tidy() %>% 
+  mutate(OR = exp(estimate)) %>%
+  bind_cols(.,  exp(confint_tidy(fit_logistic_wash))) %>% 
+  select(term, OR, conf.low, conf.high) %>% 
+  filter(term != '(Intercept)') %>% 
+  mutate(term = c("Fall", "Summer", "Winter", "Afternoon", "Dawn", "Morning", "snow 50+", "snow 50-", "prcp 25+", "prcp 25-", "Street closed"),
+         neightborhood = 'Washington Heights') %>% 
+  mutate(term = factor(term, levels = as.ordered(term)))
+ 
+table_results_wash %>% 
+   knitr::kable(digits = 3, "html") %>% 
+  kableExtra::kable_styling(bootstrap_options = c("striped", "hover"))
 ```
 
 ```{r plot_OR}
-#OR_UWS =
-# ggplot(table_results_uws, aes(x = term, y = OR)) +
-  # geom_hline(aes(yintercept = 1), size = 1, linetype = "dashed") +
-    #  geom_pointrange(aes(ymin = conf.low, ymax = conf.high)) +
-  # coord_flip()
+OR_UWS =
+ ggplot(table_results_uws, aes(x = term, y = OR)) +
+  geom_hline(aes(yintercept = 1), size = 1, linetype = "dashed") +
+  geom_pointrange(aes(ymin = conf.low, ymax = conf.high)) +
+  coord_flip()
 
-# OR_WASH =
-# ggplot(table_results_wash, aes(x = term, y = OR)) +
-  # geom_hline(aes(yintercept = 1), size = 1, linetype = "dashed") +
-    # geom_pointrange(aes(ymin = conf.low, ymax = conf.high)) +
-  # coord_flip()
+OR_WASH =
+  ggplot(table_results_wash, aes(x = term, y = OR)) +
+  geom_hline(aes(yintercept = 1), size = 1, linetype = "dashed") +
+  geom_pointrange(aes(ymin = conf.low, ymax = conf.high)) +
+  coord_flip()
   
-#OR_all <- 
- # table_results_uws %>% bind_rows(table_results_wash) %>% 
-#  ggplot(., aes(x = term, y = OR, colour = neightborhood)) +
- # geom_hline(aes(yintercept = 1), size = 1, linetype = "dashed") +
-  #   geom_pointrange(aes(ymin = conf.low, ymax = conf.high), 
-   #  position = position_dodge(width = 0.30)) +
-    # coord_flip() + xlab('') + ylab('Odds ratio') 
-# ggsave("OR_all.png", plot = OR_all, width = 45, height = 25, units = "cm")
+OR_all <- 
+  table_results_uws %>% bind_rows(table_results_wash) %>% 
+  ggplot(., aes(x = term, y = OR, colour = neightborhood)) +
+  geom_hline(aes(yintercept = 1), size = 1, linetype = "dashed") +
+  geom_pointrange(aes(ymin = conf.low, ymax = conf.high), 
+                  position = position_dodge(width = 0.30)) +
+  coord_flip() + 
+  xlab('') + 
+  ylab('Odds ratio') 
+
+ggsave("OR_all.png", plot = OR_all, width = 45, height = 25, units = "cm")
 ```
 
 #### step 4-4 Fitting regression model by neightborhood
@@ -675,19 +685,18 @@ On UWS, high precipitation is associated with lower odds of response times great
 Washington Heights, on the other hand, saw afternoon and dawn time, compared to the night time as reference, as contributing factors to the response time greater than 8 minutes with ORs 1.6 and 1.3, respectively. 
 
 ```{r}
-# fit_logistic_neighbor =
-  # glm(over_8min ~ season + hour_of_day + snow_ctg + prcp_ctg + street_closed + neighborhood, family = binomial(), data = subset)
+fit_logistic_neighbor =
+   glm(over_8min ~ season + hour_of_day + snow_ctg + prcp_ctg + street_closed + neighborhood, family = binomial(), data = dat_subset)
 
-# summary(fit_logistic_neighbor)
+summary(fit_logistic_neighbor)
 
-# fit_logistic_neighbor %>% 
-  #  broom::tidy() %>% 
-  # mutate(OR = exp(estimate)) %>%
-  # bind_cols(.,  exp(confint_tidy(fit_logistic_neighbor))) %>% 
-  # select(term, OR, conf.low, conf.high) %>% 
-  # filter(term != '(Intercept)') %>% 
-  # mutate(term = c("Fall", "Summer", "Winter", "Afternoon", "Dawn", "Morning", "snow 50+", "snow 50-", "prcp 25+", "prcp 25-", "Street closed", "Washington Heights"))
-
+fit_logistic_neighbor %>% 
+  broom::tidy() %>% 
+  mutate(OR = exp(estimate)) %>%
+  bind_cols(.,  exp(confint_tidy(fit_logistic_neighbor))) %>% 
+  select(term, OR, conf.low, conf.high) %>% 
+  filter(term != '(Intercept)') %>% 
+  mutate(term = c("Fall", "Summer", "Winter", "Afternoon", "Dawn", "Morning", "snow 50+", "snow 50-", "prcp 25+", "prcp 25-", "Street closed", "Washington Heights"))
 ```
 
 Washington Height has 1.05 times the odds of response time greater than 8 minutes compared to UWS. However the observed effect is not statistically significant.
