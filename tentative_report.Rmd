@@ -4,32 +4,18 @@ output:
   html_document
 ---
 
-Motivation: Provide an overview of the project goals and motivation.
-
-Related work: Anything that inspired you, such as a paper, a web site, or something we discussed in class.
-
-Initial questions: What questions are you trying to answer? How did these questions evolve over the course of the project? What new questions did you consider in the course of your analysis?
-
-Data: Source, scraping method, cleaning, etc.
-
-Exploratory analysis: Visualizations, summaries, and exploratory statistical analyses. Justify the steps you took, and show any major changes to your ideas.
-
-Additional analysis: If you undertake formal statistical analyses, describe these in detail
-
-Discussion: What were your findings? Are they what you expect? What insights into the data can you make?
-
 ###Motivation:
 
-A major concern in emergency medical services (EMS) planning has been the need to minimize response time to better patient outcome, translated by some EMS operations into a goal of a response time of 8 minutes or less for advanced life support (ALS) units responding to life-threatening events. An exploratory analysis suggested there may be a small beneficial effect of response ≤7 minutes 59 seconds for those who survived to become an inpatient. More information on this can be found [here](https://www.ncbi.nlm.nih.gov/pubmed/11927452) and [here](https://www.ncbi.nlm.nih.gov/pubmed/22026820)
+A major concern in emergency medical services (EMS) planning has been the need to minimize response time to better patient outcome, translated by some EMS operations into a goal of a response time of 8 minutes or less for advanced life support (ALS) units responding to life-threatening events. Several research results suggested there may be a small beneficial effect of response ≤7 minutes 59 seconds for those who survived to become an inpatient. More information on this can be found [here](https://www.ncbi.nlm.nih.gov/pubmed/11927452) and [here](https://www.ncbi.nlm.nih.gov/pubmed/22026820)
 
-Due to its large population, New York City requires a powerful, quick, well-equipped and effective Emergency Medical Service System. Hence, we decided to analyse the EMS response time in New York City in the year 2017 with respect to weather and street blockage so as to improve it.
+Therefore, to find out what factors are assoicated response time could be the first step to reduce the response time. Due to its large population, New York City requires a powerful, quick, well-equipped and effective Emergency Medical Service System. Hence, we explored the data of EMS response time in New York City in the year 2017 with respect to weather, time and street blockage.
 
 ### Initial questions: 
 We tried to answer the factors assoicated with EMS response time. We assumed rainy or snowy conditions, season and hour of the day will affect the response time. 
 
 Some of the questions that drove our analysis were:
 
-* How does season, hour of the day, rainy or snowly conditions affect the response time?
+* How do season, hour of the day, rainy or snowly conditions affect the response time?
 
 * What other factors affect response time?
 
@@ -682,7 +668,7 @@ ggsave("OR_all.png", plot = OR_all, width = 45, height = 25, units = "cm")
 OR_all
 ```
 
-#### step 4-4 Fitting regression model by neightborhood
+#### step 4-4 Fitting regression model by neighborhood
 On UWS, high precipitation is associated with lower odds of response times greater than 8 minutes. Street closure is associated with the outcome but not statistically significant.
 Washington Heights, on the other hand, saw afternoon and dawn time, compared to the night time as reference, as contributing factors to the response time greater than 8 minutes with ORs 1.6 and 1.3, respectively. 
 
@@ -703,12 +689,8 @@ fit_logistic_neighbor %>%
 
 Washington Height has 1.05 times the odds of response time greater than 8 minutes compared to UWS. However the observed effect is not statistically significant.
 
-### Discussion: 
 
-We combined and merged multiple variables into our final dataset. These variables are prcp_ctg(categorized), snow_ctg, season, hour of the day. These graphs show us that there is a slight increase in mean response time when precipitation is heavy; there is an increase in mean response time when snowy condition presented. When analyzing with the season variables, mean response time is slightly increased in winter, which may be explained along with snow variable. On the other hand, when analyzing the effect of the hour of the day on mean response time, It seems that response is delayed peak around 5 am and getting improved. Based on this result, hour of the day will be categorized into dawn, morning, afternoon and night later in our statistical model analysis. 
-
-
-###Further Statistical Analysis
+###Additional Statistical Analysis
 
 As we first tried the linear regression we found out that despite the significant p value, the estimate of the variables are very small. We wanted to change to another statistical method to get relatively meaningful result. We summarize the continuous response time in to binary outcomes, about whether it is higher than 8 mins or not. We also categorized the snow and prcp into binary variables. The model we chose is here: 
 $$
@@ -725,13 +707,12 @@ In the Odd Ratio table generated from the code in the above section, we found ou
 * For the rainy condition, statistically significant result was not obtained from prcp variable and it matches the result of EDA.
 * Furthermore, in reference to night, odds of over 8min response time is increased at dawn by 26%, in the morning by 37% and in the afternoon by 35%. It seems like the emergency service in our city is more or less affected by snowy condition, and somewhat delayed in the morning.
 
-* Further research can be planned to investigate the causation of that, but there is something important to keep in mind: the avarage response time is pretty small, and most the of recorded response times are lower than 8 minutes. Thus so far we do not need to worry about the medical emergency service provided in our city. 
-
 On the other hand, we have construct logistic analysis on our subset filtered with neighborhood area variables, UMS, and Washington Heights in specific based on the [paper published earlier this year in California](https://www.ncbi.nlm.nih.gov/pubmed/29381111)  county that challenges the commonly held assumption that ambulances are later to poor neighborhoods. This got us interested in exploring the relationship in emergency response time between a economically well off area - Upper West Side and a relatively poorer area such as Washington Heigths.  On Upper West Side, high precipitation is associated with lower odds of response times greater than 8 minutes. What’s interesting here is why? Street closure is associated with the outcome but not statistically significant. Washington Heights, on the other hand, saw afternoon and dawn time, compared to the night time as reference, as contributing factors to the response time greater than 8 minutes with ORs 1.6 and 1.3, respectively. Again street closure is not predictive of the outcome. The null result from street closure could be due to either linking street closure to the zip code in this case is too broad or street closure did not really play a role in our response time. 
 
 We also fitted the model with neighborhood as predictor variable and found that Washington Heights had 1.05 times the odds of response time greater than 8 minutes compared to the Upper West Side. However the observed effect is not statistically significant. At least we can be rest assured whether where we live, we still receive equal treatment from the emergency dispatcher.
 
-###Scope for further studies:
 
-* Having established that the emergency response time is relatively satisfactory in New York City, this opens up questions about the qualifications of the emergency responders and what type of care providers at different levels are allowed to provide.
-* If all the response vehicles have the necessary equipments to deal with any emergency situation.
+### Discussion: 
+
+We found out that in snowy conditions, the odds of over 8min response increases while rainy rainy conduition does not effect on the outcome. Along with this result, the odds of over 8min response increased in winter and it may be linked to snow factor. Also, response time was also affected by when the event happened. We tried to connect these results with the traffic such because we expected that if traffic is heavier due to snow or when response happened, the response time will be delayed. But it was hard to visulize this expectation due to the difficulty of matching the location of event and the traffic. 
+From our results, we can recommend the plan such as assigning more ambulances in snowy conditions and during the day.   
