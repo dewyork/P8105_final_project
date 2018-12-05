@@ -1,5 +1,6 @@
 ---
-title: "tentative report"
+title: "Final report"
+author: "Youn Kyeong Chang (yc3242), Pengxuan Chen(pc2853), Anusorn Thanataveerat (at2710), Apoorva Srinivasan (as5697), Abhishek Ajay (aa4266)"
 output:
   html_document
 ---
@@ -584,25 +585,32 @@ save(dat_subset, file = "data/subset_dat.RData")
 
 #### step 4-3 Logistic regression and visualization with among UWS and Washington Heights
 ```{r}
-uws_dat = dat_subset %>% 
-  filter(neighborhood == 'Upper West Side')
+load('data/subset_dat.RData') 
 
+subset <- dat_subset %>% 
+  #Only retain variables of interest
+  select(response_time, neighborhood, season:street_closed) %>% 
+  #recode neightborhood (washington as opposed to Inwood + washington heights)
+  mutate(neighborhood = ifelse(neighborhood == 'Inwood and Washington Heights',
+      'Washington Heights', neighborhood)) %>% 
+  mutate(prcp_ctg = fct_relevel(prcp_ctg, "no_prcp"),
+         snow_ctg = fct_relevel(snow_ctg, "no_snow"),
+         season = fct_relevel(season, "Spring"),
+         hour_of_day = fct_relevel(hour_of_day, "night"))
+
+uws_dat <- subset %>% filter(neighborhood == 'Upper West Side')
 fit_logistic_uws =
   glm(over_8min ~ season + hour_of_day + snow_ctg + prcp_ctg + street_closed, 
       family = binomial(), data = uws_dat)
-
 summary(fit_logistic_uws)
 ```
 
 ```{r}
-wash_dat <- 
-  dat_subset %>% 
-  filter(neighborhood == 'Inwood and Washington Heights')
+wash_dat <- subset %>% filter(neighborhood == 'Washington Heights')
 
 fit_logistic_wash =
   glm(over_8min ~ season + hour_of_day + snow_ctg + prcp_ctg + street_closed, 
-      family = binomial(), 
-      data = wash_dat)
+      family = binomial(), data = wash_dat)
 
 summary(fit_logistic_wash)
 ```
@@ -670,11 +678,11 @@ OR_all
 
 #### step 4-4 Fitting regression model by neighborhood
 On UWS, high precipitation is associated with lower odds of response times greater than 8 minutes. Street closure is associated with the outcome but not statistically significant.
-Washington Heights, on the other hand, saw afternoon and dawn time, compared to the night time as reference, as contributing factors to the response time greater than 8 minutes with ORs 1.6 and 1.3, respectively. 
+Washington Heights, on the other hand, saw afternoon and morning time, compared to the night time as reference, as contributing factors to the response time greater than 8 minutes with ORs 1.6 and 1.8, respectively. 
 
 ```{r}
 fit_logistic_neighbor =
-   glm(over_8min ~ season + hour_of_day + snow_ctg + prcp_ctg + street_closed + neighborhood, family = binomial(), data = dat_subset)
+   glm(over_8min ~ season + hour_of_day + snow_ctg + prcp_ctg + street_closed + neighborhood, family = binomial(), data = subset)
 
 summary(fit_logistic_neighbor)
 
@@ -687,7 +695,7 @@ fit_logistic_neighbor %>%
   mutate(term = c("Fall", "Summer", "Winter", "Afternoon", "Dawn", "Morning", "snow 50+", "snow 50-", "prcp 25+", "prcp 25-", "Street closed", "Washington Heights"))
 ```
 
-Washington Height has 1.05 times the odds of response time greater than 8 minutes compared to UWS. However the observed effect is not statistically significant.
+Washington Heights has 1.05 times the odds of response time greater than 8 minutes compared to UWS. However the observed effect is not statistically significant.
 
 
 ###Additional Statistical Analysis
