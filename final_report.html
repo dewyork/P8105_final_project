@@ -338,7 +338,7 @@ div.tocify {
 <p>We tried to answer the factors assoicated with EMS response time. We assumed rainy or snowy conditions, season and hour of the day will affect the response time.</p>
 <p>Some of the questions that drove our analysis were:</p>
 <ul>
-<li><p>How do season, hour of the day, rainy or snowly conditions affect the response time?</p></li>
+<li><p>How do season, hour of the day, rainy or snowly conditions affected the response time in 2017?</p></li>
 <li><p>What other factors affect response time?</p></li>
 </ul>
 <p><a href="https://www.ncbi.nlm.nih.gov/pubmed/29381111">This</a> study done in California county early this year challenges the commonly held assumption that ambulances are later to poor neighborhoods. This got us interested in exploring the relationship in emergency response time between a economically well off area - Upper West Side and a relatively poorer area such as Washington Heigths.</p>
@@ -349,8 +349,14 @@ div.tocify {
 <p><strong>Incidents Responded to by Fire Companies:</strong> <a href="https://data.cityofnewyork.us/Public-Safety/Incidents-Responded-to-by-Fire-Companies/tm6d-hbzd">This</a> dataset contains detailed information on incidents handled by FDNY Fire units and includes fire, medical and non-fire emergencies. For this project, we have filtered only EMS related data. The data is collected in the New York Fire Incident Reporting System (NYFIRS), which is structured by the FDNY to provide data to the National Fire Incident Reporting System (NFIRS). NFIRS is a modular all-incident reporting system designed by the U.S. Fire Administration. The original dataset contains 24 columns from which our aim outcome variable is response time which was obtained by subtracting incident time and arrival time. We are also interested in area(borough and zipcode) and street highway.</p>
 <p><strong>The New York City Weather Data</strong></p>
 <p><a href="https://www.ncdc.noaa.gov/cdo-web/datasets">This</a> dataset includes weather records of the city from 2014- 2018. We have restrcited our analysis to 2017 so the data was filtered accordingly. From this dataset, we have selected precipication, snow, snow depth and maximum and minimum temperatures everyday throughout the year.</p>
-<p>Street Closure due to Construction data : <a href="https://data.cityofnewyork.us/Transportation/Street-Closures-due-to-construction-activities-by-/478a-yykk">This</a> For this project, we were interested in how street closures in NYC affects the response time. For this, we have acquired DOT Street Closure Data. DOT Street Closure data identifies locations in the New York City Street Closure map where a street is subject to a full closure, restricting through traffic, for the purpose of conducting construction related activity on a City street. From this datset of 7 columns, we have filtered out work state and end date in 2017, on and from street and borough code for our interest.</p>
-<p><strong>Limitations of our analysis:</strong> response time ‘clock’ almost universally stops when the unit arrives in front of the address; in large office or apartment buildings, actually accessing the patient may take several minutes longer, but this is not considered in response time calculation or reporting.</p>
+<p><strong>Street Closure due to Construction data</strong></p>
+<p>We were interested in how <a href="https://data.cityofnewyork.us/Transportation/Street-Closures-due-to-construction-activities-by-/478a-yykk">street closures</a> in NYC affects the response time. For this, we acquired DOT Street Closure Data. DOT Street Closure data identifies locations in the New York City Street Closure map where a street is subject to a full closure, restricting through traffic, for the purpose of conducting construction related activity on a City street. From this datset of 7 columns, we have filtered out work state and end date in 2017, on and from street and borough code for our interest.</p>
+<p><strong>Limitations of our analysis:</strong></p>
+<ul>
+<li>Response time ‘clock’ almost universally stops when the unit arrives in front of the address; in large office or apartment buildings, actually accessing the patient may take several minutes longer, but this is not considered in response time calculation or reporting.</li>
+<li>Missing traffic variable due to inability to match traffic with the location of the event.</li>
+<li>Inability to map geographic map of each borough in interactive visualization plot.</li>
+</ul>
 </div>
 <div id="exploratory-analysis" class="section level2">
 <h2>Exploratory Analysis</h2>
@@ -956,7 +962,7 @@ finaldat %&gt;%
 ##  - attr(*, &quot;complete&quot;)= logi FALSE
 ##  - attr(*, &quot;validate&quot;)= logi TRUE</code></pre>
 <pre class="r"><code>ggsave(&quot;hour.png&quot;, plot = hour_eda)</code></pre>
-<p>Accordingly, based on medical research, using a fact that 8min is a critical point, we categorized response time into binary outcome as less than 8min and over 8min.</p>
+<p>Accordingly, based on medical research, the ideal response time is 8mins. Hence, we categorized response time into binary outcome as less than 8min and over 8min.</p>
 </div>
 <div id="step-3-3logistic-regression" class="section level4">
 <h4>Step 3-3:Logistic regression</h4>
@@ -1304,7 +1310,7 @@ OR</code></pre>
 </div>
 <div id="step-4" class="section level3">
 <h3>Step 4</h3>
-<p>When we wish to summarize the street closure data to get another variable to explain the response time, we realize that is pretty hard to do. Since the original street closure data is recorded based on street junctions, and there is not a zipcode variable included, we need to connect zipcode to every street junction in the dataset in order to merge it with the incident data. This required a lot of work, and thus we only did it with two neighborhood areas, the UWS and Washington Heights. We then matched the neighbourhood with the zip codes, for us to filter the selected neighborhood in both the incident and the street closure data to create a subset.</p>
+<p>Next, we were interested in exploring how street closure affects response time. Since the original street closure data is recorded based on street junctions, and there is not a zipcode variable included, we needed to connect zipcode to every street junction in the dataset in order to merge it with the incident data. This had to be done manually. Hence, we considered two neighborhood areas: the Upper West Side and Washington and Inwood Heights. We then matched the neighbourhood with the zip codes, for us to filter the selected neighborhood in both the incident and the street closure data to create a subset.</p>
 <div id="step-4-1-data-cleaning-for-original-street-closure-data" class="section level4">
 <h4>Step 4-1 data cleaning for original street closure data</h4>
 <pre class="r"><code>street_closure_2017 &lt;-  
@@ -1931,7 +1937,6 @@ OR_all</code></pre>
 </div>
 <div id="step-4-4-fitting-regression-model-by-neighborhood" class="section level4">
 <h4>Step 4-4 Fitting regression model by neighborhood</h4>
-<p>On UWS, high precipitation is associated with lower odds of response times greater than 8 minutes. Street closure is associated with the outcome but not statistically significant. Washington Heights, on the other hand, saw afternoon and morning time, compared to the night time as reference, as contributing factors to the response time greater than 8 minutes with ORs 1.6 and 1.8, respectively.</p>
 <pre class="r"><code>fit_logistic_neighbor =
    glm(over_8min ~ season + hour_of_day + snow_ctg + prcp_ctg + street_closed + neighborhood, family = binomial(), data = subset)
 
@@ -1998,20 +2003,23 @@ summary(fit_logistic_neighbor)</code></pre>
 </div>
 <div id="additional-statistical-analysis" class="section level2">
 <h2>Additional Statistical Analysis</h2>
-<p>As we first tried the linear regression we found out that despite the significant p value, the estimate of the variables are very small. We wanted to change to another statistical method to get relatively meaningful result. We summarize the continuous response time in to binary outcomes, about whether it is higher than 8 mins or not. We also categorized the snow and prcp into binary variables. The model we chose is here: <span class="math display">\[
+<p>As we first tried the linear regression we found out that despite the significant p value, the estimate of the variables are very small. We wanted to change to another statistical method to get relatively meaningful result. We summarized the continuous response time in to binary outcomes, about whether it is higher than 8 mins or not. We also categorized the snow and precipitation columns into binary variables. The model we chose is here:</p>
+<p><span class="math display">\[
 \begin{aligned}
 &amp;logit(P(response\space time &gt; 8 min))\\
 &amp;= \beta_{0} + \beta_{1}I(season = Fall) + \beta_{2}I(season = Summer) + \beta_{3}I(season = Winter) \\
 &amp; + \beta_{4}I(hour\space of \space day = afternoon) + \beta_{5}I(hour\space of \space day = dawn) + \beta_{6}I(hour\space of \space day = morning) \\
 &amp; + \beta_{7}I(snow = 50mm+) + \beta_{8}I(snow = 50mm-) + \beta_{9}I(prcp = 25mm+) + \beta_{10}I(prcp = 25mm-) 
 \end{aligned}
-\]</span> In the Odd Ratio table generated from the code in the above section, we found out that * As expected from EDA, compared to no snow conditions, odds of over 8min response time is increased 24% by 0~50mm snow and 47% by over 50mm snow. * In summary of the effect of seasons, compared to Spring, Summer does not affect odds of over 8min response time but odds is increased in Fall by 6% and in Winter by 7%. * For the rainy condition, statistically significant result was not obtained from prcp variable and it matches the result of EDA. * Furthermore, in reference to night, odds of over 8min response time is increased at dawn by 26%, in the morning by 37% and in the afternoon by 35%. It seems like the emergency service in our city is more or less affected by snowy condition, and somewhat delayed in the morning.</p>
-<p>On the other hand, we have construct logistic analysis on our subset filtered with neighborhood area variables, UMS, and Washington Heights in specific based on the <a href="https://www.ncbi.nlm.nih.gov/pubmed/29381111">paper published earlier this year in California</a> county that challenges the commonly held assumption that ambulances are later to poor neighborhoods. This got us interested in exploring the relationship in emergency response time between a economically well off area - Upper West Side and a relatively poorer area such as Washington Heigths. On Upper West Side, high precipitation is associated with lower odds of response times greater than 8 minutes. What’s interesting here is why? Street closure is associated with the outcome but not statistically significant. Washington Heights, on the other hand, saw afternoon and dawn time, compared to the night time as reference, as contributing factors to the response time greater than 8 minutes with ORs 1.6 and 1.3, respectively. Again street closure is not predictive of the outcome. The null result from street closure could be due to either linking street closure to the zip code in this case is too broad or street closure did not really play a role in our response time.</p>
-<p>We also fitted the model with neighborhood as predictor variable and found that Washington Heights had 1.05 times the odds of response time greater than 8 minutes compared to the Upper West Side. However the observed effect is not statistically significant. At least we can be rest assured whether where we live, we still receive equal treatment from the emergency dispatcher.</p>
+\]</span></p>
+<p>In the Odd Ratio table generated from the code in the above section, we found out that * As expected from EDA, compared to no snow conditions, odds of over 8min response time is increased 24% by 0~50mm snow and 47% by over 50mm snow. * In summary of the effect of seasons, compared to Spring, Summer does not affect odds of over 8min response time but odds is increased in Fall by 6% and in Winter by 7%. * For the rainy condition, statistically significant result was not obtained from prcp variable and it matches the result of EDA. * Furthermore, in reference to night, odds of over 8min response time is increased at dawn by 26%, in the morning by 37% and in the afternoon by 35%. It seems like the emergency service in our city is more or less affected by snowy condition, and somewhat delayed in the morning.</p>
+<p>On the other hand, we have constructed logistic analysis on our subset filtered with neighborhood area variables, UMS, and Washington Heights in specific based on the <a href="https://www.ncbi.nlm.nih.gov/pubmed/29381111">paper published earlier this year in California</a> county that challenges the commonly held assumption that ambulances are later to poor neighborhoods. This got us interested in exploring the relationship in emergency response time between a economically well off area - Upper West Side and a relatively poorer area such as Washington Heigths. Interestingly, In Upper West Side, high precipitation is associated with lower odds of response times greater than 8 minutes. Street closure is associated with the outcome but not statistically significant. Washington Heights, on the other hand, saw afternoon and dawn time, compared to the night time as reference, as contributing factors to the response time greater than 8 minutes with ORs 1.6 and 1.8, respectively. Again street closure is not predictive of the outcome. The null result from street closure could be due to either linking street closure to the zip code in this case is too broad or street closure did not really play a role in our response time.</p>
+<p>We also fitted the model with neighborhood as predictor variable and found that Washington Heights had 1.05 times the odds of response time greater than 8 minutes compared to the Upper West Side. However the observed effect is not statistically significant.</p>
 </div>
 <div id="discussion" class="section level2">
 <h2>Discussion</h2>
-<p>We found out that in snowy conditions, the odds of over 8min response increases while rainy rainy conduition does not effect on the outcome. Along with this result, the odds of over 8min response increased in winter and it may be linked to snow factor. Also, response time was also affected by when the event happened. We tried to connect these results with the traffic such because we expected that if traffic is heavier due to snow or when response happened, the response time will be delayed. But it was hard to visulize this expectation due to the difficulty of matching the location of event and the traffic. From our results, we can recommend the plan such as assigning more ambulances in snowy conditions and during the day.</p>
+<p>From our exploratory and logistic regression analysis, we found out that in snowy conditions, the odds of over 8min response increases while rainy condition does not effect the outcome in New York City in 2017. Along with this result, the odds of over 8min response increased in winter and it may be linked to snow factor. From this analysis, we can recommend a plan which assigns more ambulances in snowy conditions and during early hours.</p>
+<p>While comparing Upper West Side and Washington &amp; Inwood Heights, the odds of getting different response time wasn’t statistically significant. Hence, we can be rest assured that where we live, we will receive equal treatment from the emergency dispatcher.</p>
 </div>
 
 
