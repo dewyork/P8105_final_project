@@ -351,12 +351,6 @@ div.tocify {
 <p><a href="https://www.ncdc.noaa.gov/cdo-web/datasets">This</a> dataset includes weather records of the city from 2014- 2018. We have restrcited our analysis to 2017 so the data was filtered accordingly. From this dataset, we have selected precipication, snow, snow depth and maximum and minimum temperatures everyday throughout the year.</p>
 <p><strong>Street Closure due to Construction data</strong></p>
 <p>We were interested in how <a href="https://data.cityofnewyork.us/Transportation/Street-Closures-due-to-construction-activities-by-/478a-yykk">street closures</a> in NYC affects the response time. For this, we acquired DOT Street Closure Data. DOT Street Closure data identifies locations in the New York City Street Closure map where a street is subject to a full closure, restricting through traffic, for the purpose of conducting construction related activity on a City street. From this datset of 7 columns, we have filtered out work state and end date in 2017, on and from street and borough code for our interest.</p>
-<p><strong>Limitations of our analysis:</strong></p>
-<ul>
-<li>Response time ‘clock’ almost universally stops when the unit arrives in front of the address; in large office or apartment buildings, actually accessing the patient may take several minutes longer, but this is not considered in response time calculation or reporting.</li>
-<li>Missing traffic variable due to inability to match traffic with the location of the event.</li>
-<li>Inability to map geographic map of each borough in interactive visualization plot.</li>
-</ul>
 </div>
 <div id="exploratory-analysis" class="section level2">
 <h2>Exploratory Analysis</h2>
@@ -2020,6 +2014,13 @@ summary(fit_logistic_neighbor)</code></pre>
 <h2>Discussion</h2>
 <p>From our exploratory and logistic regression analysis, we found out that in snowy conditions, the odds of over 8min response increases while rainy condition does not effect the outcome in New York City in 2017. Along with this result, the odds of over 8min response increased in winter and it may be linked to snow factor. From this analysis, we can recommend a plan which assigns more ambulances in snowy conditions and during early hours.</p>
 <p>While comparing Upper West Side and Washington &amp; Inwood Heights, the odds of getting different response time wasn’t statistically significant. Hence, we can be rest assured that where we live, we will receive equal treatment from the emergency dispatcher.</p>
+<p>Further investigation can be done using traffic as a variable. This can also be specifically used to determine if holiday events such as Thanksgiving or Hawlloween Parades affects the response time.</p>
+<p><strong>Limitations of our analysis:</strong></p>
+<ul>
+<li>Response time ‘clock’ almost universally stops when the unit arrives in front of the address; in large office or apartment buildings, actually accessing the patient may take several minutes longer, but this is not considered in response time calculation or reporting.</li>
+<li>Missing traffic variable due to inability to match traffic with the location of the event.</li>
+<li>Inability to map geographic map of each borough in interactive visualization plot</li>
+</ul>
 </div>
 
 
