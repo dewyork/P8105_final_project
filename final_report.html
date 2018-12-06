@@ -20,9 +20,6 @@
 <script src="site_libs/bootstrap-3.3.5/js/bootstrap.min.js"></script>
 <script src="site_libs/bootstrap-3.3.5/shim/html5shiv.min.js"></script>
 <script src="site_libs/bootstrap-3.3.5/shim/respond.min.js"></script>
-<script src="site_libs/jqueryui-1.11.4/jquery-ui.min.js"></script>
-<link href="site_libs/tocify-1.9.1/jquery.tocify.css" rel="stylesheet" />
-<script src="site_libs/tocify-1.9.1/jquery.tocify.js"></script>
 <script src="site_libs/navigation-1.1/tabsets.js"></script>
 <link href="site_libs/highlightjs-9.12.0/default.css" rel="stylesheet" />
 <script src="site_libs/highlightjs-9.12.0/highlight.js"></script>
@@ -173,101 +170,6 @@ $(document).ready(function () {
 <!-- code folding -->
 
 
-
-
-<script>
-$(document).ready(function ()  {
-
-    // move toc-ignore selectors from section div to header
-    $('div.section.toc-ignore')
-        .removeClass('toc-ignore')
-        .children('h1,h2,h3,h4,h5').addClass('toc-ignore');
-
-    // establish options
-    var options = {
-      selectors: "h1,h2,h3",
-      theme: "bootstrap3",
-      context: '.toc-content',
-      hashGenerator: function (text) {
-        return text.replace(/[.\\/?&!#<>]/g, '').replace(/\s/g, '_').toLowerCase();
-      },
-      ignoreSelector: ".toc-ignore",
-      scrollTo: 0
-    };
-    options.showAndHide = true;
-    options.smoothScroll = true;
-
-    // tocify
-    var toc = $("#TOC").tocify(options).data("toc-tocify");
-});
-</script>
-
-<style type="text/css">
-
-#TOC {
-  margin: 25px 0px 20px 0px;
-}
-@media (max-width: 768px) {
-#TOC {
-  position: relative;
-  width: 100%;
-}
-}
-
-
-.toc-content {
-  padding-left: 30px;
-  padding-right: 40px;
-}
-
-div.main-container {
-  max-width: 1200px;
-}
-
-div.tocify {
-  width: 20%;
-  max-width: 260px;
-  max-height: 85%;
-}
-
-@media (min-width: 768px) and (max-width: 991px) {
-  div.tocify {
-    width: 25%;
-  }
-}
-
-@media (max-width: 767px) {
-  div.tocify {
-    width: 100%;
-    max-width: none;
-  }
-}
-
-.tocify ul, .tocify li {
-  line-height: 20px;
-}
-
-.tocify-subheader .tocify-item {
-  font-size: 0.90em;
-  padding-left: 25px;
-  text-indent: 0;
-}
-
-.tocify .list-group-item {
-  border-radius: 0px;
-}
-
-
-</style>
-
-<!-- setup 3col/9col grid for toc_float and main content  -->
-<div class="row-fluid">
-<div class="col-xs-12 col-sm-4 col-md-3">
-<div id="TOC" class="tocify">
-</div>
-</div>
-
-<div class="toc-content col-xs-12 col-sm-8 col-md-9">
 
 
 
@@ -451,7 +353,7 @@ load(&#39;data/finaldat.RData&#39;)</code></pre>
   group_by(hour) %&gt;% 
   ggplot(aes(x = hour, y = response_time)) + 
   geom_smooth(se = FALSE) </code></pre>
-<p><img src="final_report_files/figure-html/unnamed-chunk-4-1.png" width="672" /></p>
+<p><img src="final_report_files/figure-html/unnamed-chunk-4-1.png" /><!-- --></p>
 <div id="response-time-in-rainy-and-snowy-days" class="section level5">
 <h5>2. Response time in rainy and snowy days</h5>
 <pre class="r"><code>finaldat %&gt;% 
@@ -473,7 +375,7 @@ load(&#39;data/finaldat.RData&#39;)</code></pre>
         strip.background = element_rect(fill = &quot;black&quot;),
         strip.text = element_text(color = &quot;white&quot;, face = &quot;bold&quot;),
         legend.position = &quot;None&quot;) </code></pre>
-<p><img src="final_report_files/figure-html/unnamed-chunk-5-1.png" width="672" /></p>
+<p><img src="final_report_files/figure-html/unnamed-chunk-5-1.png" /><!-- --></p>
 <pre class="r"><code>finaldat %&gt;% 
   mutate(snow = snow &gt; 0) %&gt;%
   group_by(date, snow) %&gt;% 
@@ -493,7 +395,7 @@ load(&#39;data/finaldat.RData&#39;)</code></pre>
         strip.background = element_rect(fill = &quot;black&quot;),
         strip.text = element_text(color = &quot;white&quot;, face = &quot;bold&quot;),
         legend.position = &quot;None&quot;) </code></pre>
-<p><img src="final_report_files/figure-html/unnamed-chunk-5-2.png" width="672" /></p>
+<p><img src="final_report_files/figure-html/unnamed-chunk-5-2.png" /><!-- --></p>
 <p>We showed some trends by hour of the day and by snowy conditions. Based on this result, we fit linear regression.</p>
 </div>
 </div>
@@ -1298,7 +1200,7 @@ OR =
 
 ggsave(&quot;OR.png&quot;, plot = OR, width = 45, height = 25, units = &quot;cm&quot;)
 OR</code></pre>
-<p><img src="final_report_files/figure-html/unnamed-chunk-12-1.png" width="672" /></p>
+<p><img src="final_report_files/figure-html/unnamed-chunk-12-1.png" /><!-- --></p>
 <p>Based on EDA, to get statistical analysis, we fit logistic regression and results are followings: - Snow: As expected from EDA, compared to no snow conditions, odds of over 8min response time is increased 24% by 0~50mm snow and 47% by over 50mm snow. - Season: Compared to Spring, Summer does not affect odds of over 8min response time but odds is increased in Fall by 6% and in Winter by 7%. - Rain: Statistically significant result was not obtained from rain variable and it matches the result of EDA. - Hour of the day: In reference to night, odds of over 8min response time is increased at dawn by 26%, in the morning by 37% and in the afternoon by 35%.</p>
 </div>
 </div>
@@ -1927,7 +1829,7 @@ OR_all &lt;-
 
 ggsave(&quot;OR_all.png&quot;, plot = OR_all, width = 45, height = 25, units = &quot;cm&quot;)
 OR_all</code></pre>
-<p><img src="final_report_files/figure-html/plot_OR-1.png" width="672" /></p>
+<p><img src="final_report_files/figure-html/plot_OR-1.png" /><!-- --></p>
 </div>
 <div id="step-4-4-fitting-regression-model-by-neighborhood" class="section level4">
 <h4>Step 4-4 Fitting regression model by neighborhood</h4>
@@ -2025,8 +1927,6 @@ summary(fit_logistic_neighbor)</code></pre>
 
 
 
-</div>
-</div>
 
 </div>
 

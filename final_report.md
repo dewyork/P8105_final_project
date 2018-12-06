@@ -43,28 +43,14 @@ We were interested in how [street closures](https://data.cityofnewyork.us/Transp
 
 ## Exploratory Analysis
 
-```{r setup, include=FALSE}
-library(tidyverse)
-library(lubridate)
-library(xml2)
-library(rvest)
-library(rnoaa)
-library(knitr)
-library(patchwork)
-library(readxl)
-library(kableExtra)
-library(magick)
-library(broom)
-knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE)
 
-theme_set(theme_bw())
-```
 
 ###Step 1: Data Preparation
 
 ####1. Incident data (response from Fire company)
 
-```{r }
+
+```r
 incident_dat_2017 <-
   read_csv('data/Incidents_Responded_to_by_Fire_Companies.csv',
   col_types = "cicccicciccccccccccciccccccc") %>%
@@ -100,7 +86,8 @@ save(incident_dat_2017, file = "data/incident_dat_2017.RData")
 
 ####2. Neighborhood variable (by zipcode) dataset
 
-```{r fig.height = 8}
+
+```r
 url = "https://www.health.ny.gov/statistics/cancer/registry/appendix/neighborhoods.htm?fbclid=IwAR3N4VlKC1OehRZyEuDYPEAE7AFAEXXIRC11seIBKxA-0fd3g4hL0QvnV20"
 
 xml = read_html(url)
@@ -123,7 +110,8 @@ save(zip_code_table, file = "data/zipcode.RData")
 
 ####3. Add weather-related dataset
 
-```{r}
+
+```r
 library(rnoaa)
 
 nyc_weather_2017 = 
@@ -140,7 +128,8 @@ save(nyc_weather_2017, file = "data/nyc_weather_2017.RData")
 
 ####4. Merge first three for final dataset
 
-```{r merge}
+
+```r
 # incident_dat_2017 
 finaldat =  
   left_join(incident_dat_2017, zip_code_table, by = "zip_code") %>% 
@@ -160,15 +149,19 @@ Given that data of response time is right skewed, for visulization, we took a me
 ####Step 2-1: EDA
 
 ####1. Hourly trend of response time
-```{r}
+
+```r
 finaldat %>%
   group_by(hour) %>% 
   ggplot(aes(x = hour, y = response_time)) + 
   geom_smooth(se = FALSE) 
 ```
 
+![](final_report_files/figure-html/unnamed-chunk-4-1.png)<!-- -->
+
 #####2. Response time in rainy and snowy days
-```{r}
+
+```r
 finaldat %>% 
   mutate(prcp = prcp > 0) %>%
   group_by(date, prcp) %>% 
@@ -188,7 +181,11 @@ finaldat %>%
         strip.background = element_rect(fill = "black"),
         strip.text = element_text(color = "white", face = "bold"),
         legend.position = "None") 
+```
 
+![](final_report_files/figure-html/unnamed-chunk-5-1.png)<!-- -->
+
+```r
 finaldat %>% 
   mutate(snow = snow > 0) %>%
   group_by(date, snow) %>% 
@@ -210,35 +207,125 @@ finaldat %>%
         legend.position = "None") 
 ```
 
+![](final_report_files/figure-html/unnamed-chunk-5-2.png)<!-- -->
+
 We showed some trends by hour of the day and by snowy conditions. Based on this result, we fit linear regression. 
 
 ####Step 2-2: Linear regression 
 
 ####1. hour of the day vs response time 
 
-```{r}
+
+```r
 fit_hour = lm(response_time ~ hour, data = finaldat)
 fit_hour %>% 
   broom::tidy() %>% 
   knitr::kable(digits = 3)
 ```
 
+<table>
+ <thead>
+  <tr>
+   <th style="text-align:left;"> term </th>
+   <th style="text-align:right;"> estimate </th>
+   <th style="text-align:right;"> std.error </th>
+   <th style="text-align:right;"> statistic </th>
+   <th style="text-align:right;"> p.value </th>
+  </tr>
+ </thead>
+<tbody>
+  <tr>
+   <td style="text-align:left;"> (Intercept) </td>
+   <td style="text-align:right;"> 5.470 </td>
+   <td style="text-align:right;"> 0.017 </td>
+   <td style="text-align:right;"> 317.714 </td>
+   <td style="text-align:right;"> 0 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> hour </td>
+   <td style="text-align:right;"> -0.034 </td>
+   <td style="text-align:right;"> 0.001 </td>
+   <td style="text-align:right;"> -29.176 </td>
+   <td style="text-align:right;"> 0 </td>
+  </tr>
+</tbody>
+</table>
+
 Ho: different hour of the day makes no difference in logs response time.
 p-value: very small.
 conclusion: There is a difference of log response time in different time/hour of the day.
 
 #####2. snow & prcp vs response time ----- linear regression
-```{r}
+
+```r
 fit_snow = lm(response_time~snow, data = finaldat)
 fit_snow %>% 
   broom::tidy() %>% 
   knitr::kable(digits = 3)
+```
 
+<table>
+ <thead>
+  <tr>
+   <th style="text-align:left;"> term </th>
+   <th style="text-align:right;"> estimate </th>
+   <th style="text-align:right;"> std.error </th>
+   <th style="text-align:right;"> statistic </th>
+   <th style="text-align:right;"> p.value </th>
+  </tr>
+ </thead>
+<tbody>
+  <tr>
+   <td style="text-align:left;"> (Intercept) </td>
+   <td style="text-align:right;"> 5.009 </td>
+   <td style="text-align:right;"> 0.007 </td>
+   <td style="text-align:right;"> 678.552 </td>
+   <td style="text-align:right;"> 0 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> snow </td>
+   <td style="text-align:right;"> 0.003 </td>
+   <td style="text-align:right;"> 0.000 </td>
+   <td style="text-align:right;"> 7.456 </td>
+   <td style="text-align:right;"> 0 </td>
+  </tr>
+</tbody>
+</table>
+
+```r
 fit_prcp = lm(response_time~prcp, data = finaldat)
 fit_prcp %>% 
   broom::tidy() %>% 
   knitr::kable(digits = 3)
 ```
+
+<table>
+ <thead>
+  <tr>
+   <th style="text-align:left;"> term </th>
+   <th style="text-align:right;"> estimate </th>
+   <th style="text-align:right;"> std.error </th>
+   <th style="text-align:right;"> statistic </th>
+   <th style="text-align:right;"> p.value </th>
+  </tr>
+ </thead>
+<tbody>
+  <tr>
+   <td style="text-align:left;"> (Intercept) </td>
+   <td style="text-align:right;"> 5.005 </td>
+   <td style="text-align:right;"> 0.008 </td>
+   <td style="text-align:right;"> 647.000 </td>
+   <td style="text-align:right;"> 0 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> prcp </td>
+   <td style="text-align:right;"> 0.003 </td>
+   <td style="text-align:right;"> 0.001 </td>
+   <td style="text-align:right;"> 4.014 </td>
+   <td style="text-align:right;"> 0 </td>
+  </tr>
+</tbody>
+</table>
 
 H0: There is no correlation between snow and log_response_time
 p-value: very small
@@ -246,13 +333,63 @@ estimate: positive
 conclusion: There is a positive correlation between snow and log response time. 
 
 ####3. MLR based on snow, prcp, tmax, tmin(factors of nature environment) in different hour of the day
-```{r}
+
+```r
 fit_mlr = lm(response_time~snow + prcp + tmax + tmin, data = finaldat)
 
 fit_mlr %>% 
   broom::tidy() %>% 
   knitr::kable(digits = 3)
 ```
+
+<table>
+ <thead>
+  <tr>
+   <th style="text-align:left;"> term </th>
+   <th style="text-align:right;"> estimate </th>
+   <th style="text-align:right;"> std.error </th>
+   <th style="text-align:right;"> statistic </th>
+   <th style="text-align:right;"> p.value </th>
+  </tr>
+ </thead>
+<tbody>
+  <tr>
+   <td style="text-align:left;"> (Intercept) </td>
+   <td style="text-align:right;"> 5.077 </td>
+   <td style="text-align:right;"> 0.022 </td>
+   <td style="text-align:right;"> 226.683 </td>
+   <td style="text-align:right;"> 0.000 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> snow </td>
+   <td style="text-align:right;"> 0.002 </td>
+   <td style="text-align:right;"> 0.000 </td>
+   <td style="text-align:right;"> 4.539 </td>
+   <td style="text-align:right;"> 0.000 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> prcp </td>
+   <td style="text-align:right;"> 0.002 </td>
+   <td style="text-align:right;"> 0.001 </td>
+   <td style="text-align:right;"> 2.830 </td>
+   <td style="text-align:right;"> 0.005 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> tmax </td>
+   <td style="text-align:right;"> 0.000 </td>
+   <td style="text-align:right;"> 0.003 </td>
+   <td style="text-align:right;"> 0.123 </td>
+   <td style="text-align:right;"> 0.902 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> tmin </td>
+   <td style="text-align:right;"> -0.008 </td>
+   <td style="text-align:right;"> 0.003 </td>
+   <td style="text-align:right;"> -2.742 </td>
+   <td style="text-align:right;"> 0.006 </td>
+  </tr>
+</tbody>
+</table>
 
 Even though we could get the statistically significant results with p-values less than 0.05, the estimates are too small so explanations from this was not meaningful. 
 
@@ -262,31 +399,13 @@ Even though we could get the statistically significant results with p-values les
 
 Next, we categorized explanatory variables since we wanted to show the change of response time by the trend of precipitation, snow, season and time rather than by detailed amount of precipitation and snow or specific time. With these modified variables, we performed exploratory data analysis.
 
-```{r finaldata, include = FALSE}
-finaldat = 
-  finaldat %>%
-  mutate(season = 
-           ifelse(incident_month %in% 9:11, "Fall",
-           ifelse(incident_month %in% c(12,1,2), "Winter",
-           ifelse(incident_month %in% 3:5, "Spring", "Summer"))), 
-         hour_of_day = 
-           ifelse(hour %in% 6:11, "morning",
-           ifelse(hour %in% 12:17, "afternoon",
-           ifelse(hour %in% 18:23, "night","dawn"))), 
-         over_8min = ifelse(response_time > 8, "8min+", "8min-"),
-         prcp_ctg = 
-           if_else(prcp == 0, "no_prcp",
-           if_else((prcp > 0 & prcp <= 25), "low", "high")),
-         snow_ctg = 
-           if_else(snow == 0, "no_snow",
-           if_else((snow > 0 & snow <= 50), "low", "high")),
-         over_8min = fct_relevel(over_8min, "8min-")) 
-```
+
 
 ####Step 3-2:EDA based on modified variables
 
 ####1. precipitation and snow
-```{r}
+
+```r
 prcp_eda =
   finaldat %>% 
   mutate(prcp_ctg = fct_relevel(prcp_ctg, c("no_prcp", "low", "high"))) %>%   
@@ -335,7 +454,8 @@ ggsave("prcp_snow.png", plot = prcp_snow)
 ```
 
 ####2. Season
-```{r}
+
+```r
 season_eda =
 finaldat %>% 
   mutate(season = fct_relevel(season, c("Spring", "Summer", "Fall", "Winter"))) %>% 
@@ -360,7 +480,8 @@ ggsave("season.png", plot = season_eda)
 ```
 
 ####3. Hour
-```{r}
+
+```r
 hour_eda =
 finaldat %>%
   group_by(hour, season) %>% 
@@ -380,14 +501,64 @@ finaldat %>%
         axis.title.y = element_text(size = 10),
         axis.text.x = element_text(size = 12),
         legend.position = "None") 
+```
 
+```
+## List of 4
+##  $ axis.title.y   :List of 11
+##   ..$ family       : NULL
+##   ..$ face         : NULL
+##   ..$ colour       : NULL
+##   ..$ size         : num 10
+##   ..$ hjust        : NULL
+##   ..$ vjust        : NULL
+##   ..$ angle        : NULL
+##   ..$ lineheight   : NULL
+##   ..$ margin       : NULL
+##   ..$ debug        : NULL
+##   ..$ inherit.blank: logi FALSE
+##   ..- attr(*, "class")= chr [1:2] "element_text" "element"
+##  $ axis.text.x    :List of 11
+##   ..$ family       : NULL
+##   ..$ face         : NULL
+##   ..$ colour       : NULL
+##   ..$ size         : num 12
+##   ..$ hjust        : NULL
+##   ..$ vjust        : NULL
+##   ..$ angle        : NULL
+##   ..$ lineheight   : NULL
+##   ..$ margin       : NULL
+##   ..$ debug        : NULL
+##   ..$ inherit.blank: logi FALSE
+##   ..- attr(*, "class")= chr [1:2] "element_text" "element"
+##  $ legend.position: chr "None"
+##  $ plot.title     :List of 11
+##   ..$ family       : NULL
+##   ..$ face         : NULL
+##   ..$ colour       : NULL
+##   ..$ size         : num 13
+##   ..$ hjust        : NULL
+##   ..$ vjust        : NULL
+##   ..$ angle        : NULL
+##   ..$ lineheight   : NULL
+##   ..$ margin       : NULL
+##   ..$ debug        : NULL
+##   ..$ inherit.blank: logi FALSE
+##   ..- attr(*, "class")= chr [1:2] "element_text" "element"
+##  - attr(*, "class")= chr [1:2] "theme" "gg"
+##  - attr(*, "complete")= logi FALSE
+##  - attr(*, "validate")= logi TRUE
+```
+
+```r
 ggsave("hour.png", plot = hour_eda)
 ```
 
 Accordingly, based on medical research, the ideal response time is 8mins. Hence, we categorized response time into binary outcome as less than 8min and over 8min.   
 
 ####Step 3-3:Logistic regression
-```{r}
+
+```r
 finaldat = 
   finaldat %>% 
   mutate(prcp_ctg = fct_relevel(prcp_ctg, "no_prcp"),
@@ -400,7 +571,44 @@ fit_logistic =
       family = binomial(), data = finaldat)
 
 summary(fit_logistic)
+```
 
+```
+## 
+## Call:
+## glm(formula = over_8min ~ season + hour_of_day + snow_ctg + prcp_ctg, 
+##     family = binomial(), data = finaldat)
+## 
+## Deviance Residuals: 
+##     Min       1Q   Median       3Q      Max  
+## -0.4561  -0.3762  -0.3658  -0.3271   2.4710  
+## 
+## Coefficients:
+##                       Estimate Std. Error  z value Pr(>|z|)    
+## (Intercept)          -2.959451   0.028609 -103.443  < 2e-16 ***
+## seasonFall            0.058271   0.028900    2.016  0.04377 *  
+## seasonSummer         -0.002128   0.028837   -0.074  0.94117    
+## seasonWinter          0.070643   0.029485    2.396  0.01658 *  
+## hour_of_dayafternoon  0.300029   0.026713   11.231  < 2e-16 ***
+## hour_of_daydawn       0.230470   0.034634    6.654 2.84e-11 ***
+## hour_of_daymorning    0.314235   0.028550   11.006  < 2e-16 ***
+## snow_ctghigh          0.387983   0.084315    4.602 4.19e-06 ***
+## snow_ctglow           0.212878   0.077437    2.749  0.00598 ** 
+## prcp_ctghigh         -0.042873   0.057984   -0.739  0.45967    
+## prcp_ctglow          -0.024086   0.023208   -1.038  0.29936    
+## ---
+## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+## 
+## (Dispersion parameter for binomial family taken to be 1)
+## 
+##     Null deviance: 78187  on 167589  degrees of freedom
+## Residual deviance: 77979  on 167579  degrees of freedom
+## AIC: 78001
+## 
+## Number of Fisher Scoring iterations: 5
+```
+
+```r
 fit_logistic %>% 
   broom::tidy() %>% 
   mutate(OR = exp(estimate),
@@ -408,8 +616,88 @@ fit_logistic %>%
          upper_CI_OR = exp(estimate + 1.96*std.error)) %>% 
   select(term, OR, lower_CI_OR, upper_CI_OR) %>% 
   mutate(term = c("intercept", "Fall", "Summer", "Winter", "Afternoon", "Dawn", "Morning", "snow 50+", "snow 50-", "prcp 25+", "prcp 25-")) %>%   knitr::kable(digits = 3, "html") %>% kableExtra::kable_styling(bootstrap_options = c("striped", "hover"))
+```
 
+<table class="table table-striped table-hover" style="margin-left: auto; margin-right: auto;">
+ <thead>
+  <tr>
+   <th style="text-align:left;"> term </th>
+   <th style="text-align:right;"> OR </th>
+   <th style="text-align:right;"> lower_CI_OR </th>
+   <th style="text-align:right;"> upper_CI_OR </th>
+  </tr>
+ </thead>
+<tbody>
+  <tr>
+   <td style="text-align:left;"> intercept </td>
+   <td style="text-align:right;"> 0.052 </td>
+   <td style="text-align:right;"> 0.049 </td>
+   <td style="text-align:right;"> 0.055 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> Fall </td>
+   <td style="text-align:right;"> 1.060 </td>
+   <td style="text-align:right;"> 1.002 </td>
+   <td style="text-align:right;"> 1.122 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> Summer </td>
+   <td style="text-align:right;"> 0.998 </td>
+   <td style="text-align:right;"> 0.943 </td>
+   <td style="text-align:right;"> 1.056 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> Winter </td>
+   <td style="text-align:right;"> 1.073 </td>
+   <td style="text-align:right;"> 1.013 </td>
+   <td style="text-align:right;"> 1.137 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> Afternoon </td>
+   <td style="text-align:right;"> 1.350 </td>
+   <td style="text-align:right;"> 1.281 </td>
+   <td style="text-align:right;"> 1.422 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> Dawn </td>
+   <td style="text-align:right;"> 1.259 </td>
+   <td style="text-align:right;"> 1.177 </td>
+   <td style="text-align:right;"> 1.348 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> Morning </td>
+   <td style="text-align:right;"> 1.369 </td>
+   <td style="text-align:right;"> 1.295 </td>
+   <td style="text-align:right;"> 1.448 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> snow 50+ </td>
+   <td style="text-align:right;"> 1.474 </td>
+   <td style="text-align:right;"> 1.249 </td>
+   <td style="text-align:right;"> 1.739 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> snow 50- </td>
+   <td style="text-align:right;"> 1.237 </td>
+   <td style="text-align:right;"> 1.063 </td>
+   <td style="text-align:right;"> 1.440 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> prcp 25+ </td>
+   <td style="text-align:right;"> 0.958 </td>
+   <td style="text-align:right;"> 0.855 </td>
+   <td style="text-align:right;"> 1.073 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> prcp 25- </td>
+   <td style="text-align:right;"> 0.976 </td>
+   <td style="text-align:right;"> 0.933 </td>
+   <td style="text-align:right;"> 1.022 </td>
+  </tr>
+</tbody>
+</table>
 
+```r
 OR_total_df = 
 fit_logistic %>% 
   broom::tidy() %>% 
@@ -525,6 +813,8 @@ ggsave("OR.png", plot = OR, width = 45, height = 25, units = "cm")
 OR
 ```
 
+![](final_report_files/figure-html/unnamed-chunk-12-1.png)<!-- -->
+
 Based on EDA, to get statistical analysis, we fit logistic regression and results are followings: 
 - Snow: As expected from EDA, compared to no snow conditions, odds of over 8min response time is increased 24% by 0~50mm snow and 47% by over 50mm snow.
 - Season: Compared to Spring, Summer does not affect odds of over 8min response time but odds is increased in Fall by 6% and in Winter by 7%.
@@ -536,7 +826,8 @@ Based on EDA, to get statistical analysis, we fit logistic regression and result
 Next, we were interested in exploring how street closure affects response time.  Since the original street closure data is recorded based on street junctions, and there is not a zipcode variable included, we needed to connect zipcode to every street junction in the dataset in order to merge it with the incident data. This had to be done manually. Hence, we considered two neighborhood areas: the Upper West Side and Washington and Inwood Heights. We then matched the neighbourhood with the zip codes, for us to filter the selected neighborhood in both the incident and the street closure data to create a subset.
 
 ####Step 4-1 data cleaning for original street closure data 
-```{r}
+
+```r
 street_closure_2017 <-  
   read_csv('data/Street_Closures_due_to_construction_activities_by_Intersection.csv') %>% 
   janitor::clean_names() %>% 
@@ -555,7 +846,8 @@ save(street_closure_2017, file = "data/street_closure_2017.RData")
 ```
 
 ####Step 4-2 Add street closure data and create subset data for UWS and WH
-```{r}
+
+```r
 #list of streets of intereste
 street_zip <- read_excel('./data/street_junctions_zipcode.xlsx') %>% 
   #delete white space from street name 
@@ -595,7 +887,8 @@ save(dat_subset, file = "data/subset_dat.RData")
 ```
 
 ####Step 4-3 Logistic regression and visualization with among UWS and Washington Heights
-```{r}
+
+```r
 load('data/subset_dat.RData') 
 
 subset <- dat_subset %>% 
@@ -616,8 +909,45 @@ fit_logistic_uws =
 summary(fit_logistic_uws)
 ```
 
+```
+## 
+## Call:
+## glm(formula = over_8min ~ season + hour_of_day + snow_ctg + prcp_ctg + 
+##     street_closed, family = binomial(), data = uws_dat)
+## 
+## Deviance Residuals: 
+##     Min       1Q   Median       3Q      Max  
+## -0.5427  -0.3986  -0.3577  -0.3198   2.8739  
+## 
+## Coefficients:
+##                      Estimate Std. Error z value Pr(>|z|)    
+## (Intercept)          -2.83346    0.19867 -14.262   <2e-16 ***
+## seasonFall           -0.47027    0.24973  -1.883   0.0597 .  
+## seasonSummer         -0.22236    0.20141  -1.104   0.2696    
+## seasonWinter         -0.01566    0.21217  -0.074   0.9412    
+## hour_of_dayafternoon  0.35631    0.18714   1.904   0.0569 .  
+## hour_of_daydawn       0.45071    0.25250   1.785   0.0743 .  
+## hour_of_daymorning    0.38077    0.20086   1.896   0.0580 .  
+## snow_ctghigh          0.44003    0.55488   0.793   0.4278    
+## snow_ctglow           0.28654    0.51052   0.561   0.5746    
+## prcp_ctghigh         -1.27998    0.72319  -1.770   0.0767 .  
+## prcp_ctglow          -0.01853    0.16096  -0.115   0.9084    
+## street_closed         0.20596    0.20845   0.988   0.3231    
+## ---
+## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+## 
+## (Dispersion parameter for binomial family taken to be 1)
+## 
+##     Null deviance: 1607  on 3386  degrees of freedom
+## Residual deviance: 1589  on 3375  degrees of freedom
+## AIC: 1613
+## 
+## Number of Fisher Scoring iterations: 6
+```
 
-```{r}
+
+
+```r
 wash_dat <- subset %>% filter(neighborhood == 'Washington Heights')
 
 fit_logistic_wash =
@@ -627,7 +957,44 @@ fit_logistic_wash =
 summary(fit_logistic_wash)
 ```
 
-```{r}
+```
+## 
+## Call:
+## glm(formula = over_8min ~ season + hour_of_day + snow_ctg + prcp_ctg + 
+##     street_closed, family = binomial(), data = wash_dat)
+## 
+## Deviance Residuals: 
+##     Min       1Q   Median       3Q      Max  
+## -0.6915  -0.3962  -0.3538  -0.3066   2.6222  
+## 
+## Coefficients:
+##                      Estimate Std. Error z value Pr(>|z|)    
+## (Intercept)           -2.8675     0.2322 -12.351  < 2e-16 ***
+## seasonFall            -0.2942     0.2297  -1.281  0.20016    
+## seasonSummer          -0.1007     0.2254  -0.447  0.65490    
+## seasonWinter           0.1149     0.2244   0.512  0.60866    
+## hour_of_dayafternoon   0.4628     0.2221   2.084  0.03716 *  
+## hour_of_daydawn        0.2508     0.2926   0.857  0.39135    
+## hour_of_daymorning     0.5856     0.2269   2.581  0.00986 ** 
+## snow_ctghigh           1.3078     0.6896   1.896  0.05791 .  
+## snow_ctglow           -0.1308     0.6369  -0.205  0.83726    
+## prcp_ctghigh          -0.8082     0.5062  -1.597  0.11035    
+## prcp_ctglow           -0.3349     0.1971  -1.699  0.08934 .  
+## street_closed         -0.1022     0.4760  -0.215  0.82994    
+## ---
+## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+## 
+## (Dispersion parameter for binomial family taken to be 1)
+## 
+##     Null deviance: 1277.1  on 2677  degrees of freedom
+## Residual deviance: 1258.6  on 2666  degrees of freedom
+## AIC: 1282.6
+## 
+## Number of Fisher Scoring iterations: 5
+```
+
+
+```r
 #Prepare table for visualization
 table_results_uws <-  fit_logistic_uws %>% 
   broom::tidy() %>% 
@@ -644,7 +1011,99 @@ table_results_uws %>%
   kableExtra::kable_styling(bootstrap_options = c("striped", "hover"))
 ```
 
-```{r}
+<table class="table table-striped table-hover" style="margin-left: auto; margin-right: auto;">
+ <thead>
+  <tr>
+   <th style="text-align:left;"> term </th>
+   <th style="text-align:right;"> OR </th>
+   <th style="text-align:right;"> conf.low </th>
+   <th style="text-align:right;"> conf.high </th>
+   <th style="text-align:left;"> neightborhood </th>
+  </tr>
+ </thead>
+<tbody>
+  <tr>
+   <td style="text-align:left;"> Fall </td>
+   <td style="text-align:right;"> 0.625 </td>
+   <td style="text-align:right;"> 0.380 </td>
+   <td style="text-align:right;"> 1.013 </td>
+   <td style="text-align:left;"> UWS </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> Summer </td>
+   <td style="text-align:right;"> 0.801 </td>
+   <td style="text-align:right;"> 0.538 </td>
+   <td style="text-align:right;"> 1.187 </td>
+   <td style="text-align:left;"> UWS </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> Winter </td>
+   <td style="text-align:right;"> 0.984 </td>
+   <td style="text-align:right;"> 0.647 </td>
+   <td style="text-align:right;"> 1.489 </td>
+   <td style="text-align:left;"> UWS </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> Afternoon </td>
+   <td style="text-align:right;"> 1.428 </td>
+   <td style="text-align:right;"> 0.994 </td>
+   <td style="text-align:right;"> 2.074 </td>
+   <td style="text-align:left;"> UWS </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> Dawn </td>
+   <td style="text-align:right;"> 1.569 </td>
+   <td style="text-align:right;"> 0.945 </td>
+   <td style="text-align:right;"> 2.553 </td>
+   <td style="text-align:left;"> UWS </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> Morning </td>
+   <td style="text-align:right;"> 1.463 </td>
+   <td style="text-align:right;"> 0.988 </td>
+   <td style="text-align:right;"> 2.177 </td>
+   <td style="text-align:left;"> UWS </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> snow 50+ </td>
+   <td style="text-align:right;"> 1.553 </td>
+   <td style="text-align:right;"> 0.446 </td>
+   <td style="text-align:right;"> 4.154 </td>
+   <td style="text-align:left;"> UWS </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> snow 50- </td>
+   <td style="text-align:right;"> 1.332 </td>
+   <td style="text-align:right;"> 0.435 </td>
+   <td style="text-align:right;"> 3.348 </td>
+   <td style="text-align:left;"> UWS </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> prcp 25+ </td>
+   <td style="text-align:right;"> 0.278 </td>
+   <td style="text-align:right;"> 0.045 </td>
+   <td style="text-align:right;"> 0.899 </td>
+   <td style="text-align:left;"> UWS </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> prcp 25- </td>
+   <td style="text-align:right;"> 0.982 </td>
+   <td style="text-align:right;"> 0.711 </td>
+   <td style="text-align:right;"> 1.338 </td>
+   <td style="text-align:left;"> UWS </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> Street closed </td>
+   <td style="text-align:right;"> 1.229 </td>
+   <td style="text-align:right;"> 0.818 </td>
+   <td style="text-align:right;"> 1.854 </td>
+   <td style="text-align:left;"> UWS </td>
+  </tr>
+</tbody>
+</table>
+
+
+```r
 table_results_wash =  
   fit_logistic_wash %>% 
   broom::tidy() %>% 
@@ -661,7 +1120,99 @@ table_results_wash %>%
   kableExtra::kable_styling(bootstrap_options = c("striped", "hover"))
 ```
 
-```{r plot_OR}
+<table class="table table-striped table-hover" style="margin-left: auto; margin-right: auto;">
+ <thead>
+  <tr>
+   <th style="text-align:left;"> term </th>
+   <th style="text-align:right;"> OR </th>
+   <th style="text-align:right;"> conf.low </th>
+   <th style="text-align:right;"> conf.high </th>
+   <th style="text-align:left;"> neightborhood </th>
+  </tr>
+ </thead>
+<tbody>
+  <tr>
+   <td style="text-align:left;"> Fall </td>
+   <td style="text-align:right;"> 0.745 </td>
+   <td style="text-align:right;"> 0.473 </td>
+   <td style="text-align:right;"> 1.168 </td>
+   <td style="text-align:left;"> Washington Heights </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> Summer </td>
+   <td style="text-align:right;"> 0.904 </td>
+   <td style="text-align:right;"> 0.580 </td>
+   <td style="text-align:right;"> 1.408 </td>
+   <td style="text-align:left;"> Washington Heights </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> Winter </td>
+   <td style="text-align:right;"> 1.122 </td>
+   <td style="text-align:right;"> 0.721 </td>
+   <td style="text-align:right;"> 1.743 </td>
+   <td style="text-align:left;"> Washington Heights </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> Afternoon </td>
+   <td style="text-align:right;"> 1.589 </td>
+   <td style="text-align:right;"> 1.035 </td>
+   <td style="text-align:right;"> 2.480 </td>
+   <td style="text-align:left;"> Washington Heights </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> Dawn </td>
+   <td style="text-align:right;"> 1.285 </td>
+   <td style="text-align:right;"> 0.713 </td>
+   <td style="text-align:right;"> 2.261 </td>
+   <td style="text-align:left;"> Washington Heights </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> Morning </td>
+   <td style="text-align:right;"> 1.796 </td>
+   <td style="text-align:right;"> 1.158 </td>
+   <td style="text-align:right;"> 2.828 </td>
+   <td style="text-align:left;"> Washington Heights </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> snow 50+ </td>
+   <td style="text-align:right;"> 3.698 </td>
+   <td style="text-align:right;"> 0.790 </td>
+   <td style="text-align:right;"> 12.905 </td>
+   <td style="text-align:left;"> Washington Heights </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> snow 50- </td>
+   <td style="text-align:right;"> 0.877 </td>
+   <td style="text-align:right;"> 0.202 </td>
+   <td style="text-align:right;"> 2.666 </td>
+   <td style="text-align:left;"> Washington Heights </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> prcp 25+ </td>
+   <td style="text-align:right;"> 0.446 </td>
+   <td style="text-align:right;"> 0.144 </td>
+   <td style="text-align:right;"> 1.083 </td>
+   <td style="text-align:left;"> Washington Heights </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> prcp 25- </td>
+   <td style="text-align:right;"> 0.715 </td>
+   <td style="text-align:right;"> 0.480 </td>
+   <td style="text-align:right;"> 1.041 </td>
+   <td style="text-align:left;"> Washington Heights </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> Street closed </td>
+   <td style="text-align:right;"> 0.903 </td>
+   <td style="text-align:right;"> 0.311 </td>
+   <td style="text-align:right;"> 2.087 </td>
+   <td style="text-align:left;"> Washington Heights </td>
+  </tr>
+</tbody>
+</table>
+
+
+```r
 OR_UWS =
  ggplot(table_results_uws, aes(x = term, y = OR)) +
   geom_hline(aes(yintercept = 1), size = 1, linetype = "dashed") +
@@ -688,15 +1239,57 @@ ggsave("OR_all.png", plot = OR_all, width = 45, height = 25, units = "cm")
 OR_all
 ```
 
+![](final_report_files/figure-html/plot_OR-1.png)<!-- -->
+
 ####Step 4-4 Fitting regression model by neighborhood
 
 
-```{r}
+
+```r
 fit_logistic_neighbor =
    glm(over_8min ~ season + hour_of_day + snow_ctg + prcp_ctg + street_closed + neighborhood, family = binomial(), data = subset)
 
 summary(fit_logistic_neighbor)
+```
 
+```
+## 
+## Call:
+## glm(formula = over_8min ~ season + hour_of_day + snow_ctg + prcp_ctg + 
+##     street_closed + neighborhood, family = binomial(), data = subset)
+## 
+## Deviance Residuals: 
+##     Min       1Q   Median       3Q      Max  
+## -0.6117  -0.3945  -0.3562  -0.3119   2.7517  
+## 
+## Coefficients:
+##                                Estimate Std. Error z value Pr(>|z|)    
+## (Intercept)                    -2.86464    0.15912 -18.003  < 2e-16 ***
+## seasonFall                     -0.37896    0.16624  -2.280  0.02263 *  
+## seasonSummer                   -0.18311    0.14944  -1.225  0.22048    
+## seasonWinter                    0.05325    0.15168   0.351  0.72553    
+## hour_of_dayafternoon            0.40097    0.14289   2.806  0.00501 ** 
+## hour_of_daydawn                 0.36221    0.19103   1.896  0.05795 .  
+## hour_of_daymorning              0.47460    0.14988   3.167  0.00154 ** 
+## snow_ctghigh                    0.77128    0.42623   1.810  0.07036 .  
+## snow_ctglow                     0.09757    0.39631   0.246  0.80553    
+## prcp_ctghigh                   -0.89831    0.39781  -2.258  0.02394 *  
+## prcp_ctglow                    -0.15267    0.12436  -1.228  0.21959    
+## street_closed                   0.13713    0.16726   0.820  0.41232    
+## neighborhoodWashington Heights  0.04894    0.11289   0.434  0.66464    
+## ---
+## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+## 
+## (Dispersion parameter for binomial family taken to be 1)
+## 
+##     Null deviance: 2884.1  on 6064  degrees of freedom
+## Residual deviance: 2853.0  on 6052  degrees of freedom
+## AIC: 2879
+## 
+## Number of Fisher Scoring iterations: 6
+```
+
+```r
 fit_logistic_neighbor %>% 
   broom::tidy() %>% 
   mutate(OR = exp(estimate)) %>%
@@ -704,6 +1297,24 @@ fit_logistic_neighbor %>%
   select(term, OR, conf.low, conf.high) %>% 
   filter(term != '(Intercept)') %>% 
   mutate(term = c("Fall", "Summer", "Winter", "Afternoon", "Dawn", "Morning", "snow 50+", "snow 50-", "prcp 25+", "prcp 25-", "Street closed", "Washington Heights"))
+```
+
+```
+## # A tibble: 12 x 4
+##    term                  OR conf.low conf.high
+##    <chr>              <dbl>    <dbl>     <dbl>
+##  1 Fall               0.685    0.493     0.947
+##  2 Summer             0.833    0.621     1.12 
+##  3 Winter             1.05     0.783     1.42 
+##  4 Afternoon          1.49     1.13      1.98 
+##  5 Dawn               1.44     0.981     2.08 
+##  6 Morning            1.61     1.20      2.16 
+##  7 snow 50+           2.16     0.863     4.70 
+##  8 snow 50-           1.10     0.471     2.27 
+##  9 prcp 25+           0.407    0.170     0.825
+## 10 prcp 25-           0.858    0.670     1.09 
+## 11 Street closed      1.15     0.822     1.58 
+## 12 Washington Heights 1.05     0.841     1.31
 ```
 
 Washington Heights has 1.05 times the odds of response time greater than 8 minutes compared to UWS. However the observed effect is not statistically significant.
