@@ -1,0 +1,12 @@
+name: P8105_shiny
+title: P8105_shiny
+username:
+account: apoorvasrinivasan
+server: shinyapps.io
+hostUrl: https://api.shinyapps.io/v1
+appId: 605089
+bundleId: 1743199
+url: https://apoorvasrinivasan.shinyapps.io/P8105_shiny/
+when: 1544032070.72303
+asMultiple: FALSE
+asStatic: FALSE
