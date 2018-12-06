@@ -38,7 +38,7 @@ __Street Closure due to Construction data__
 We were interested in how [street closures](https://data.cityofnewyork.us/Transportation/Street-Closures-due-to-construction-activities-by-/478a-yykk) in NYC affects the response time. For this, we acquired DOT Street Closure Data. DOT Street Closure data identifies locations in the New York City Street Closure map where a street is subject to a full closure, restricting through traffic, for the purpose of conducting construction related activity on a City street. From this datset of 7 columns, we have filtered out work state and end date in 2017, on and from street and borough code for our interest.
 
 
-
+The google drive to our cleaned datasets and subset analysis is [here](https://drive.google.com/drive/folders/1DwGsoY1scfraw-F_lV9G2h-G1GNp-7Qt?fbclid=IwAR2gksn0fEaZIIpy2K4ATCdomcaV3A8xo3AVlu0i597Sb_kI4TRPwN5QXMI)
 
 
 ## Exploratory Analysis
